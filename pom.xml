@@ -1,0 +1,186 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>1.48</version>
+	</parent>
+
+	<groupId>net.imagej</groupId>
+	<artifactId>ij-server</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+
+	<name>ImageJ Web Server</name>
+	<description>A simple RESTful web server for ImageJ</description>
+	<url>http://developer.imagej.net/</url>
+	<inceptionYear>2013</inceptionYear>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>2.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-grizzly2-http</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-moxy</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.9</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-client</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-source-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<mainClass>imagej.server.Main</mainClass>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<configuration>
+					<licenseName>apache_v2</licenseName>
+					<inceptionYear>2013</inceptionYear>
+					<organizationName>Board of Regents of the University of
+Wisconsin-Madison.</organizationName>
+					<projectName>ImageJ server for RESTful access to ImageJ.</projectName>
+					<addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+					<canUpdateDescription>true</canUpdateDescription>
+					<canUpdateCopyright>true</canUpdateCopyright>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<licenses>
+		<license>
+			<name>Apache 2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>ImageJDev.org</name>
+		<url>http://developer.imagej.net/</url>
+	</organization>
+
+	<developers>
+		<developer>
+			<id>ctrueden</id>
+			<name>Curtis Rueden</name>
+			<email>ctrueden@wisc.edu</email>
+			<url>http://loci.wisc.edu/people/curtis-rueden</url>
+			<organization>UW-Madison LOCI</organization>
+			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
+	</developers>
+
+	<issueManagement>
+		<system>Trac</system>
+		<url>http://trac.imagej.net/</url>
+	</issueManagement>
+
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/</url>
+	</ciManagement>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ</name>
+			<subscribe>http://imagej.net/list.html</subscribe>
+			<unsubscribe>http://imagej.net/list.html</unsubscribe>
+			<post>imagej@list.nih.gov</post>
+			<archive>http://list.nih.gov/archives/imagej.html</archive>
+		</mailingList>
+		<mailingList>
+			<name>ImageJ-devel</name>
+			<subscribe>http://imagej.net/mailman/listinfo/imagej-devel</subscribe>
+			<unsubscribe>http://imagej.net/mailman/listinfo/imagej-devel</unsubscribe>
+			<post>imagej-devel@imagej.net</post>
+			<archive>http://imagej.net/pipermail/imagej-devel/</archive>
+		</mailingList>
+		<mailingList>
+			<name>Fiji-devel</name>
+			<subscribe>http://groups.google.com/group/fiji-devel</subscribe>
+			<unsubscribe>http://groups.google.com/group/fiji-devel</unsubscribe>
+			<post>fiji@fiji.sc</post>
+			<archive>http://groups.google.com/group/fiji-devel</archive>
+		</mailingList>
+	</mailingLists>
+
+	<scm>
+		<connection>scm:git:git://github.com/imagej/imagej-server</connection>
+		<developerConnection>scm:git:git@github.com:imagej/imagej-server</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/imagej/imagej-server</url>
+	</scm>
+
+	<!-- NB: for project parent -->
+	<repositories>
+		<repository>
+			<id>imagej.releases</id>
+			<url>http://maven.imagej.net/content/repositories/releases</url>
+		</repository>
+		<repository>
+			<id>imagej.snapshots</id>
+			<url>http://maven.imagej.net/content/repositories/snapshots</url>
+		</repository>
+	</repositories>
+
+</project>
