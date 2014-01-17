@@ -4,7 +4,8 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>1.48</version>
+		<version>1.126</version>
+		<relativePath />
 	</parent>
 
 	<groupId>net.imagej</groupId>
@@ -53,13 +54,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<artifactId>maven-source-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>buildnumber-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.2.1</version>
@@ -79,24 +73,10 @@
 				<artifactId>license-maven-plugin</artifactId>
 				<configuration>
 					<licenseName>apache_v2</licenseName>
-					<inceptionYear>2013</inceptionYear>
 					<organizationName>Board of Regents of the University of
 Wisconsin-Madison.</organizationName>
 					<projectName>ImageJ server for RESTful access to ImageJ.</projectName>
-					<addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
-					<canUpdateDescription>true</canUpdateDescription>
-					<canUpdateCopyright>true</canUpdateCopyright>
 				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>test-jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
