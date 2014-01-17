@@ -131,8 +131,8 @@ Wisconsin-Madison.</organizationName>
 	</developers>
 
 	<issueManagement>
-		<system>Trac</system>
-		<url>http://trac.imagej.net/</url>
+		<system>GitHub Issues</system>
+		<url>http://github.com/imagej/imagej-server</url>
 	</issueManagement>
 
 	<ciManagement>
