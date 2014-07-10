@@ -61,7 +61,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>imagej.server.Main</mainClass>
+					<mainClass>net.imagej.server.Main</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>

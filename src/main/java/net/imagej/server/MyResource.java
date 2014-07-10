@@ -19,7 +19,7 @@
  * #L%
  */
 
-package imagej.server;
+package net.imagej.server;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

@@ -19,13 +19,15 @@
  * #L%
  */
 
-package imagej.server;
+package net.imagej.server;
 
 import static org.junit.Assert.assertEquals;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+
+import net.imagej.server.Main;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.junit.After;

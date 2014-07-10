@@ -19,7 +19,7 @@
  * #L%
  */
 
-package imagej.server;
+package net.imagej.server;
 
 import java.io.IOException;
 import java.net.URI;
