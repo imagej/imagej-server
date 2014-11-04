@@ -50,6 +50,10 @@
 		<url>http://github.com/imagej/imagej-server</url>
 	</issueManagement>
 
+	<properties>
+		<scijava.jvm.version>1.7</scijava.jvm.version>
+	</properties>
+
 	<repositories>
 		<repository>
 			<id>imagej.public</id>
@@ -62,7 +66,7 @@
 			<dependency>
 				<groupId>org.glassfish.jersey</groupId>
 				<artifactId>jersey-bom</artifactId>
-				<version>2.0</version>
+				<version>2.13</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
