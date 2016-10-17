@@ -54,7 +54,9 @@ public class ImageJServerApplication extends
 {
 
 	public static void main(final String[] args) throws Exception {
-		new ImageJServerApplication().run(args);
+		final String[] arguments = args == null || args.length == 0 ? //
+			new String[] { "server", "imagej-server.yml" } : args;
+		new ImageJServerApplication().run(arguments);
 	}
 
 	private ImageJ ij;
