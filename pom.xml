@@ -12,7 +12,7 @@
 	<artifactId>imagej-server</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>ImageJ Web Server</name>
+	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
 	<inceptionYear>2013</inceptionYear>
 	<licenses>
