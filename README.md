@@ -1,3 +1,6 @@
+[![](http://jenkins.imagej.net/job/ImageJ-Server/lastBuild/badge/icon)](http://jenkins.imagej.net/job/ImageJ-Server/)
+[![Join the chat at https://gitter.im/imagej/imagej-server](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/imagej/imagej-server?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 # ImageJ Server
 
 This is a RESTful image server backed by ImageJ.
