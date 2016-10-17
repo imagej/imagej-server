@@ -59,7 +59,6 @@
 	<properties>
 		<main-class>net.imagej.server.ImageJServerApplication</main-class>
 		<dropwizard.version>1.0.2</dropwizard.version>
-		<enforcer.skip>true</enforcer.skip>
 	</properties>
 
 	<repositories>
@@ -73,6 +72,17 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
+			<exclusions>
+				<!--
+				NB: Conflicts with org.slf4j:jcl-over-slf which is brought in by
+				io.dropwizard:dropwizard-logging via io.dropwizard:dropwizard-core.
+				See also: http://jira.qos.ch/browse/SLF4J-250
+				-->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.dropwizard</groupId>
@@ -92,6 +102,12 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-ops</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.scijava</groupId>
