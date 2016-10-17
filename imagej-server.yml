@@ -8,4 +8,4 @@ logging:
       target: stdout
       logFormat: # TODO
 
-tmpDir: "PATH/TO/TMP/DIR"
+tmpDir: "/tmp"
