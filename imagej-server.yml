@@ -1,0 +1,11 @@
+# Logging settings.
+logging:
+  level: INFO
+  appenders:
+    - type: console
+      threshold: ALL
+      timeZone: UTC
+      target: stdout
+      logFormat: # TODO
+
+tmpDir: "PATH/TO/TMP/DIR"

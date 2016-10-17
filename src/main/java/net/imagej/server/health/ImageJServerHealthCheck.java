@@ -2,8 +2,9 @@
  * #%L
  * ImageJ server for RESTful access to ImageJ.
  * %%
- * Copyright (C) 2013 - 2015 Board of Regents of the University of
- * Wisconsin-Madison.
+ * Copyright (C) 2013 - 2016 Board of Regents of the University of
+ * Wisconsin-Madison, Broad Institute of MIT and Harvard, and Max Planck
+ * Institute of Molecular Cell Biology and Genetics.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,29 +20,15 @@
  * #L%
  */
 
-package net.imagej.server;
+package net.imagej.server.health;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import com.codahale.metrics.health.HealthCheck;
 
-/**
- * Root resource (exposed at "myresource" path).
- */
-@Path("myresource")
-public class MyResource {
+public class ImageJServerHealthCheck extends HealthCheck {
 
-	/**
-	 * Method handling HTTP GET requests. The returned object will be sent to the
-	 * client as "text/plain" media type.
-	 * 
-	 * @return String that will be returned as a text/plain response.
-	 */
-	@GET
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getIt() {
-		return "Got it!";
+	@Override
+	protected Result check() throws Exception {
+		// NB: not implemented yet
+		return Result.healthy();
 	}
-
 }

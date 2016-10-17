@@ -5,14 +5,14 @@
 	<parent>
 		<groupId>net.imagej</groupId>
 		<artifactId>pom-imagej</artifactId>
-		<version>5.0</version>
+		<version>16.5.0</version>
 		<relativePath />
 	</parent>
 
 	<artifactId>imagej-server</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>ImageJ Web Server</name>
+	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
 	<inceptionYear>2013</inceptionYear>
 	<licenses>
@@ -29,11 +29,21 @@
 			<name>Curtis Rueden</name>
 			<url>http://imagej.net/User:Rueden</url>
 			<roles>
-				<role>architect</role>
+				<role>founder</role>
+				<role>lead</role>
 				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
 			</roles>
 		</developer>
 	</developers>
+	<contributors>
+		<contributor>
+			<name>None</name>
+		</contributor>
+	</contributors>
 
 	<scm>
 		<connection>scm:git:git://github.com/imagej/imagej-server</connection>
@@ -47,7 +57,8 @@
 	</issueManagement>
 
 	<properties>
-		<scijava.jvm.version>1.7</scijava.jvm.version>
+		<main-class>net.imagej.server.ImageJServerApplication</main-class>
+		<dropwizard.version>1.0.2</dropwizard.version>
 	</properties>
 
 	<repositories>
@@ -57,25 +68,31 @@
 		</repository>
 	</repositories>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.glassfish.jersey</groupId>
-				<artifactId>jersey-bom</artifactId>
-				<version>2.13</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
 		<dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-grizzly2-http</artifactId>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+			<exclusions>
+				<!--
+				NB: Conflicts with org.slf4j:jcl-over-slf which is brought in by
+				io.dropwizard:dropwizard-logging via io.dropwizard:dropwizard-core.
+				See also: http://jira.qos.ch/browse/SLF4J-250
+				-->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>io.dropwizard</groupId>
+			<artifactId>dropwizard-core</artifactId>
+			<version>${dropwizard.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-moxy</artifactId>
+			<artifactId>jersey-media-multipart</artifactId>
+			<version>2.23.2</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -83,28 +100,23 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-client</artifactId>
-			<scope>test</scope>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-ops</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-common</artifactId>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>java</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<mainClass>net.imagej.server.Main</mainClass>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
@@ -117,5 +129,4 @@ Wisconsin-Madison.</organizationName>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
