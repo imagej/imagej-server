@@ -55,6 +55,10 @@
 		<system>GitHub Issues</system>
 		<url>http://github.com/imagej/imagej-server</url>
 	</issueManagement>
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/ImageJ-Server/</url>
+	</ciManagement>
 
 	<properties>
 		<main-class>net.imagej.server.ImageJServerApplication</main-class>
