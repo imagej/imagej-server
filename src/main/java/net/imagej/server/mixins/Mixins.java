@@ -23,9 +23,10 @@ package net.imagej.server.mixins;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Arrays;
 
 import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.IntegerType;
@@ -39,42 +40,58 @@ import net.imglib2.type.numeric.RealType;
  */
 public class Mixins {
 
+	private static final Class<?>[] SUPPORT = { ComplexType.class };
+
 	private Mixins() {}
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE)
-	public static abstract class ComplexTypeMixIn<T extends ComplexTypeMixIn<T>>
-		implements ComplexType<T>
-	{
-
-		@Override
-		@JsonProperty(value = "real")
-		public abstract double getRealDouble();
-
-		@Override
-		@JsonProperty(value = "imaginary")
-		public abstract double getImaginaryDouble();
+	/**
+	 * Checks if a given class will be supported, i.e. affected, by the registered
+	 * MixIn types.
+	 * 
+	 * @param beanClass class to be checked.
+	 * @return true if the given class is supported.
+	 */
+	public static boolean support(Class<?> beanClass) {
+		return Arrays.stream(SUPPORT).anyMatch(clazz -> clazz.isAssignableFrom(
+			beanClass));
 	}
 
-	public static abstract class RealTypeMixIn<T extends RealTypeMixIn<T>>
+	@JsonAutoDetect(getterVisibility = Visibility.NONE)
+	protected static abstract class ToStringMixIn {
+
+		@JsonValue
+		@Override
+		public abstract String toString();
+	}
+
+	protected static abstract class RealTypeMixIn<T extends RealType<T>>
 		implements RealType<T>
 	{
 
+		@JsonValue(value = false)
 		@Override
+		public abstract String toString();
+
 		@JsonValue
+		@Override
 		public abstract double getRealDouble();
 	}
 
-	public static abstract class IntegerTypeMixIn<T extends IntegerTypeMixIn<T>>
-		implements IntegerType<T>
+	protected static abstract class IntegerTypeMixIn<T extends IntegerType<T>>
+		extends RealTypeMixIn<T> implements IntegerType<T>
 	{
 
+		@JsonValue(value = false)
 		@Override
+		public abstract double getRealDouble();
+
 		@JsonValue
+		@Override
 		public abstract long getIntegerLong();
 	}
 
 	public static void registerMixIns(final ObjectMapper mapper) {
-		mapper.addMixIn(ComplexType.class, ComplexTypeMixIn.class);
+		mapper.addMixIn(ComplexType.class, ToStringMixIn.class);
 		mapper.addMixIn(RealType.class, RealTypeMixIn.class);
 		mapper.addMixIn(IntegerType.class, IntegerTypeMixIn.class);
 	}
