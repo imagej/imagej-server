@@ -61,6 +61,8 @@ public class ImageJServerApplication extends
 
 	private final JsonService jsonService;
 
+	private Environment env;
+
 	public ImageJServerApplication() {
 		objectService = new ObjectService();
 		jsonService = new JsonService(objectService);
@@ -84,6 +86,8 @@ public class ImageJServerApplication extends
 	public void run(final ImageJServerConfiguration configuration,
 		final Environment environment)
 	{
+		env = environment;
+
 		// NB: not implemented yet
 		final ImageJServerHealthCheck healthCheck = new ImageJServerHealthCheck();
 		environment.healthChecks().register("imagej-server", healthCheck);
@@ -105,5 +109,15 @@ public class ImageJServerApplication extends
 		final IOResource ioResource = new IOResource(ij, objectService,
 			tmpFileManager);
 		environment.jersey().register(ioResource);
+	}
+
+	public void stop() throws Exception {
+		if (env == null) return;
+		env.getApplicationContext().getServer().stop();
+	}
+
+	public void join() throws InterruptedException {
+		if (env == null) return;
+		env.getApplicationContext().getServer().join();
 	}
 }
