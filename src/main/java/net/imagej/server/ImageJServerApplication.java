@@ -26,18 +26,15 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.scif.SCIFIOService;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.ImageJService;
 import net.imagej.ops.OpService;
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.managers.TmpDirManager;
-import net.imagej.server.mixins.Mixins;
 import net.imagej.server.resources.IOResource;
 import net.imagej.server.resources.ModulesResource;
+import net.imagej.server.services.JsonService;
+import net.imagej.server.services.ObjectService;
 
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.scijava.Context;
@@ -60,12 +57,14 @@ public class ImageJServerApplication extends
 
 	private ImageJ ij;
 
-	/**
-	 * A list storing datasets uploaded by the clients or created during runtime.
-	 * This list should be thread-safe as it could be accessed and modified by
-	 * multiple API requests concurrently.
-	 */
-	private List<Dataset> datasetRepo;
+	private final ObjectService objectService;
+
+	private final JsonService jsonService;
+
+	public ImageJServerApplication() {
+		objectService = new ObjectService();
+		jsonService = new JsonService(objectService);
+	}
 
 	@Override
 	public String getName() {
@@ -78,7 +77,7 @@ public class ImageJServerApplication extends
 			ImageJService.class, OpService.class));
 		// HACK: better way to set imagej headless?
 		ij.ui().setHeadless(true);
-		datasetRepo = new CopyOnWriteArrayList<>();
+		jsonService.addDeserializerTo(bootstrap.getObjectMapper());
 	}
 
 	@Override
@@ -89,9 +88,6 @@ public class ImageJServerApplication extends
 		final ImageJServerHealthCheck healthCheck = new ImageJServerHealthCheck();
 		environment.healthChecks().register("imagej-server", healthCheck);
 
-		// register Jackson MixIns to obtain better json output format for some
-		// specific types
-		Mixins.registerMixIns(environment.getObjectMapper());
 		environment.jersey().register(MultiPartFeature.class);
 
 		// -- lifecycle managers --
@@ -103,10 +99,10 @@ public class ImageJServerApplication extends
 		// -- resources --
 
 		final ModulesResource modulesResource = new ModulesResource(ij,
-			datasetRepo);
+			jsonService);
 		environment.jersey().register(modulesResource);
 
-		final IOResource ioResource = new IOResource(ij, datasetRepo,
+		final IOResource ioResource = new IOResource(ij, objectService,
 			tmpFileManager);
 		environment.jersey().register(ioResource);
 	}

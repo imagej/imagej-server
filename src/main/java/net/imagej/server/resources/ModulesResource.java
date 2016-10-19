@@ -22,6 +22,7 @@
 package net.imagej.server.resources;
 
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +38,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.ops.Initializable;
+import net.imagej.server.services.JsonService;
 
 import org.scijava.Identifiable;
 import org.scijava.Priority;
@@ -61,14 +62,13 @@ public class ModulesResource {
 
 	private final ImageJ ij;
 
-	/** Thread-safe list of datasets usable by the imagej runtime */
-	private final List<Dataset> datasets;
-
 	private final List<MInfo> mInfos = new ArrayList<>();
 
-	public ModulesResource(final ImageJ ij, final List<Dataset> datasets) {
+	private final JsonService jsonService;
+
+	public ModulesResource(final ImageJ ij, final JsonService jsonService) {
 		this.ij = ij;
-		this.datasets = datasets;
+		this.jsonService = jsonService;
 
 		int index = 0;
 		for (final ModuleInfo info : ij.module().getModules()) {
@@ -130,51 +130,6 @@ public class ModulesResource {
 	}
 
 	/**
-	 * Preprocess the inputs by substituting string inputs start with "_img_" by
-	 * its corresponding image stored in {@link #datasets}.
-	 *
-	 * @param inputs inputs to be preprocessed
-	 */
-	private void preprocess(final Map<String, Object> inputs) {
-		// substitute String with Dataset
-		for (final String key : inputs.keySet()) {
-			if (inputs.get(key) instanceof String) {
-				final String val = (String) inputs.get(key);
-				if (val.startsWith("_img_")) {
-					final int idx = Integer.parseInt(val.substring("_img_".length()));
-					if (idx < 0 || idx >= datasets.size()) {
-						final String msg = String.format("Dataset %s does not exist", val);
-						throw new WebApplicationException(msg, Status.BAD_REQUEST);
-					}
-					inputs.put(key, datasets.get(idx));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Postprocess the outputs by storing any dataset into {@link #datasets} and
-	 * substitute the output value with string "_img_{ID}" where ID is the index
-	 * of the dataset in {@link #datasets}.
-	 *
-	 * @param outputs outputs to be postprocessed
-	 */
-	private void postprocess(final Map<String, Object> outputs) {
-		// substitute Dataset with String
-		for (final String key : outputs.keySet()) {
-			if (outputs.get(key) instanceof Dataset) {
-				final Dataset ds = (Dataset) outputs.get(key);
-				int idx = datasets.indexOf(ds);
-				if (idx == -1) {
-					datasets.add(ds);
-					idx = datasets.lastIndexOf(ds);
-				}
-				outputs.put(key, "_img_" + idx);
-			}
-		}
-	}
-
-	/**
 	 * Executes a module with given ID.
 	 *
 	 * @param id ID of the module to execute
@@ -183,7 +138,7 @@ public class ModulesResource {
 	 */
 	@POST
 	@Path("{id}")
-	public Map<String, Object> runModule(@PathParam("id") final String id,
+	public String runModule(@PathParam("id") final String id,
 		final RunSpec runSpec)
 	{
 		final ModuleInfo info = getModule(id);
@@ -191,8 +146,6 @@ public class ModulesResource {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
 		}
-
-		preprocess(runSpec.inputMap);
 
 		final Module m;
 		try {
@@ -206,9 +159,13 @@ public class ModulesResource {
 		}
 		final Map<String, Object> outputs = m.getOutputs();
 
-		postprocess(outputs);
-
-		return outputs;
+		try {
+			return jsonService.parseObject(outputs);
+		}
+		catch (final JsonProcessingException exc) {
+			throw new WebApplicationException("Fail to parse outputs", exc,
+				Status.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	// -- Helper classes --
