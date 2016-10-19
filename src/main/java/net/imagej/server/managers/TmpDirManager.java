@@ -65,28 +65,20 @@ public class TmpDirManager implements Managed {
 	private static final String alphanumeric_lower =
 		"0123456789abcdefghijklmnopqrstuvwxyz";
 
-	public String randomString(final int len) {
-		return randomString("", len, "", alphanumeric_lower);
-	}
-
-	public String randomString(final String prefix, final int len,
-		final String suffix)
-	{
-		return randomString(prefix, len, suffix, alphanumeric_lower);
+	public static String randomString(final int len) {
+		return randomString(len, alphanumeric_lower);
 	}
 
 	/**
 	 * Generate a random string of length {@code len} from the given
-	 * {@code alphabet}, then prepended with prefix and appended with suffix.
+	 * {@code alphabet}.
 	 */
-	public String randomString(final String prefix, final int len,
-		final String suffix, final String alphabet)
-	{
+	public static String randomString(final int len, final String alphabet) {
 		final StringBuilder sb = new StringBuilder(len);
 		final Random random = ThreadLocalRandom.current();
 		for (int i = 0; i < len; i++)
 			sb.append(alphabet.charAt(random.nextInt(alphabet.length())));
-		return prefix + sb.toString() + suffix;
+		return sb.toString();
 	}
 
 	/**
@@ -95,7 +87,7 @@ public class TmpDirManager implements Managed {
 	 * @param dir directory to clean
 	 * @return true if all files and sub-directories are removed successfully
 	 */
-	private boolean cleanDir(final File dir) {
+	private static boolean cleanDir(final File dir) {
 		boolean status = true;
 		for (final File file : dir.listFiles()) {
 			status &= file.isDirectory() ? cleanDir(file) : file.delete();

@@ -103,7 +103,7 @@ public class IOResource {
 	public JsonNode uploadFile(
 		@FormDataParam("file") final InputStream fileInputStream)
 	{
-		final String filename = tmpDirManager.randomString("io_upload", 10, "");
+		final String filename = TmpDirManager.randomString(8);
 		final java.nio.file.Path tmpFile = tmpDirManager.getFilePath(filename);
 
 		Dataset ds;
@@ -148,7 +148,7 @@ public class IOResource {
 		final int idx = Integer.parseInt(id.substring("_img_".length()));
 
 		final Dataset ds = datasets.get(idx);
-		final String filename = tmpDirManager.randomString("", 10, '.' + ext);
+		final String filename = TmpDirManager.randomString(10) + "." + ext;
 		try {
 			ij.scifio().datasetIO().save(ds, tmpDirManager.getFilePath(filename)
 				.toString(), config);
