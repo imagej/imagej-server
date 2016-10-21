@@ -161,7 +161,7 @@ public class ModulesResource {
 
 		final Module m;
 		try {
-			m = moduleService.run(info, runSpec.process, runSpec.inputMap).get();
+			m = moduleService.run(info, runSpec.process, runSpec.inputs).get();
 		}
 		catch (final InterruptedException exc) {
 			throw new WebApplicationException(Status.INTERNAL_SERVER_ERROR);
@@ -185,7 +185,7 @@ public class ModulesResource {
 	public static class RunSpec {
 
 		public boolean process = true;
-		public Map<String, Object> inputMap;
+		public Map<String, Object> inputs;
 	}
 
 	public static class MInfo {

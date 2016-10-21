@@ -31,7 +31,7 @@ APIs (try [Postman](https://www.getpostman.com/) if not already):
 
  Returns detailed information of a module
 
-- `curl -XPOST -H "Content-Type: application/json" -d '{"inputMap":{INPUTS}}' localhost:8080/modules/{id}`
+- `curl -XPOST -H "Content-Type: application/json" -d '{"inputs":{INPUTS}}' localhost:8080/modules/{id}`
 
  Executes a module with inputs from json
 
