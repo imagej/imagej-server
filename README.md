@@ -47,6 +47,10 @@ APIs (try [Postman](https://www.getpostman.com/) if not already):
 
  Download the image with FILENAME form the server. The FILENAME must be the return value from the request download API call.
 
+- `curl localhost:8080/admin/stop`
+
+ Stop the imagej-server gracefully without shutting down the imagej runtime.
+
 ## Notes and memo
 
 - Ops that need to be initialized are not working when run as module. See the HACK in `ModulesResource`

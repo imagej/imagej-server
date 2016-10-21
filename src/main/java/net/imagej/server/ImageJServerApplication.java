@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.managers.TmpDirManager;
+import net.imagej.server.resources.AdminResource;
 import net.imagej.server.resources.IOResource;
 import net.imagej.server.resources.ModulesResource;
 import net.imagej.server.services.JsonService;
@@ -93,6 +94,8 @@ public class ImageJServerApplication extends
 		environment.lifecycle().manage(tmpFileManager);
 
 		// -- resources --
+		
+		environment.jersey().register(AdminResource.class);
 
 		environment.jersey().register(ModulesResource.class);
 
