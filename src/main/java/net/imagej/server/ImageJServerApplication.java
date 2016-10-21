@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.imagej.ImageJ;
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.resources.IOResource;
@@ -50,12 +49,6 @@ import org.scijava.Context;
 public class ImageJServerApplication extends
 	Application<ImageJServerConfiguration>
 {
-
-	public static void main(final String[] args) throws Exception {
-		final String[] arguments = args == null || args.length == 0 ? //
-			new String[] { "server", "imagej-server.yml" } : args;
-		new ImageJServerApplication(new ImageJ().context()).run(arguments);
-	}
 
 	private final Context ctx;
 

@@ -75,7 +75,7 @@
 
 	<properties>
 		<package-name>net.imagej.server</package-name>
-		<main-class>net.imagej.server.ImageJServerApplication</main-class>
+		<main-class>net.imagej.server.Main</main-class>
 		<license.licenseName>apache_v2</license.licenseName>
 		<license.copyrightOwners>Board of Regents of the University of
 Wisconsin-Madison.</license.copyrightOwners>
