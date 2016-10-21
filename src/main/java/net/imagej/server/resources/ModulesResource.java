@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -38,17 +40,19 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import net.imagej.ImageJ;
 import net.imagej.ops.Initializable;
 import net.imagej.server.services.JsonService;
 
+import org.scijava.Context;
 import org.scijava.Identifiable;
 import org.scijava.Priority;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleItem;
+import org.scijava.module.ModuleService;
 import org.scijava.module.process.AbstractPreprocessorPlugin;
 import org.scijava.module.process.PreprocessorPlugin;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
@@ -57,21 +61,29 @@ import org.scijava.plugin.Plugin;
  * @author Leon Yang
  */
 @Path("/modules")
+@Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class ModulesResource {
 
-	private final ImageJ ij;
+	@Parameter
+	private ModuleService moduleService;
 
 	private final List<MInfo> mInfos = new ArrayList<>();
 
-	private final JsonService jsonService;
+	@Inject
+	private JsonService jsonService;
 
-	public ModulesResource(final ImageJ ij, final JsonService jsonService) {
-		this.ij = ij;
-		this.jsonService = jsonService;
+	/**
+	 * Initialize resource by injection. Should not be called directly.
+	 * 
+	 * @param ctx
+	 */
+	@Inject
+	public void initialize(final Context ctx) {
+		ctx.inject(this);
 
 		int index = 0;
-		for (final ModuleInfo info : ij.module().getModules()) {
+		for (final ModuleInfo info : moduleService.getModules()) {
 			final MInfo mInfo = new MInfo();
 			mInfo.info = info;
 			mInfo.index = index++;
@@ -100,7 +112,7 @@ public class ModulesResource {
 	 *         module exists
 	 */
 	private ModuleInfo getModule(final String id) {
-		final ModuleInfo info = ij.module().getModuleById(id);
+		final ModuleInfo info = moduleService.getModuleById(id);
 		if (info != null) return info;
 		try {
 			final int index = Integer.parseInt(id) - 1;
@@ -149,7 +161,7 @@ public class ModulesResource {
 
 		final Module m;
 		try {
-			m = ij.module().run(info, runSpec.process, runSpec.inputMap).get();
+			m = moduleService.run(info, runSpec.process, runSpec.inputMap).get();
 		}
 		catch (final InterruptedException exc) {
 			throw new WebApplicationException(Status.INTERNAL_SERVER_ERROR);

@@ -26,16 +26,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import io.scif.config.SCIFIOConfig;
+import io.scif.services.DatasetIOService;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -49,13 +50,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
+import net.imagej.DatasetService;
 import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.scijava.Context;
+import org.scijava.plugin.Parameter;
 
 /**
  * Server resource for managing I/O operations, including:
@@ -69,24 +72,33 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(MediaType.APPLICATION_JSON)
 public class IOResource {
 
-	private final ImageJ ij;
+	@Parameter
+	private DatasetService datasetService;
 
-	private final ObjectService objectService;
+	@Parameter
+	private DatasetIOService datasetIOService;
+
+	@Inject
+	private ObjectService objectService;
 
 	/** Thread-safe set of name of files that are currently served. */
-	private final Set<String> serving;
+	@Inject
+	@Named("SERVING")
+	private Set<String> serving;
 
-	private final TmpDirManager tmpDirManager;
+	@Inject
+	private TmpDirManager tmpDirManager;
 
 	private static final JsonNodeFactory factory = JsonNodeFactory.instance;
 
-	public IOResource(final ImageJ ij, final ObjectService objectService,
-		final TmpDirManager tmpDirManager)
-	{
-		this.ij = ij;
-		this.objectService = objectService;
-		this.tmpDirManager = tmpDirManager;
-		serving = Collections.newSetFromMap(new ConcurrentHashMap<>());
+	/**
+	 * Initialize resource by injection. Should not be called directly.
+	 * 
+	 * @param ctx
+	 */
+	@Inject
+	public void initialize(final Context ctx) {
+		ctx.inject(this);
 	}
 
 	/**
@@ -109,7 +121,7 @@ public class IOResource {
 		Dataset ds;
 		try {
 			Files.copy(fileInputStream, tmpFile);
-			ds = ij.scifio().datasetIO().open(tmpFile.toString());
+			ds = datasetIOService.open(tmpFile.toString());
 		}
 		catch (final IOException exc) {
 			throw new WebApplicationException(exc, Status.CONFLICT);
@@ -162,7 +174,7 @@ public class IOResource {
 		else {
 			@SuppressWarnings({ "rawtypes" })
 			final Img img = (Img) obj;
-			ds = ij.dataset().create(img);
+			ds = datasetService.create(img);
 		}
 
 		final String filename = String.format("%s.%s", TmpDirManager.randomString(
@@ -170,7 +182,7 @@ public class IOResource {
 		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
 
 		try {
-			ij.scifio().datasetIO().save(ds, filePath.toString(), config);
+			datasetIOService.save(ds, filePath.toString(), config);
 		}
 		catch (final IOException exc) {
 			filePath.toFile().delete();

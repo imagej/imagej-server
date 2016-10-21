@@ -24,11 +24,12 @@ package net.imagej.server;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.scif.SCIFIOService;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.imagej.ImageJ;
-import net.imagej.ImageJService;
-import net.imagej.ops.OpService;
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.resources.IOResource;
@@ -36,9 +37,10 @@ import net.imagej.server.resources.ModulesResource;
 import net.imagej.server.services.JsonService;
 import net.imagej.server.services.ObjectService;
 
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.scijava.Context;
-import org.scijava.service.SciJavaService;
 
 /**
  * Entry point to imagej-server.
@@ -52,10 +54,10 @@ public class ImageJServerApplication extends
 	public static void main(final String[] args) throws Exception {
 		final String[] arguments = args == null || args.length == 0 ? //
 			new String[] { "server", "imagej-server.yml" } : args;
-		new ImageJServerApplication().run(arguments);
+		new ImageJServerApplication(new ImageJ().context()).run(arguments);
 	}
 
-	private ImageJ ij;
+	private final Context ctx;
 
 	private final ObjectService objectService;
 
@@ -63,7 +65,8 @@ public class ImageJServerApplication extends
 
 	private Environment env;
 
-	public ImageJServerApplication() {
+	public ImageJServerApplication(final Context ctx) {
+		this.ctx = ctx;
 		objectService = new ObjectService();
 		jsonService = new JsonService(objectService);
 	}
@@ -75,10 +78,6 @@ public class ImageJServerApplication extends
 
 	@Override
 	public void initialize(final Bootstrap<ImageJServerConfiguration> bootstrap) {
-		ij = new ImageJ(new Context(SciJavaService.class, SCIFIOService.class,
-			ImageJService.class, OpService.class));
-		// HACK: better way to set imagej headless?
-		ij.ui().setHeadless(true);
 		jsonService.addDeserializerTo(bootstrap.getObjectMapper());
 	}
 
@@ -102,13 +101,28 @@ public class ImageJServerApplication extends
 
 		// -- resources --
 
-		final ModulesResource modulesResource = new ModulesResource(ij,
-			jsonService);
-		environment.jersey().register(modulesResource);
+		environment.jersey().register(ModulesResource.class);
 
-		final IOResource ioResource = new IOResource(ij, objectService,
-			tmpFileManager);
-		environment.jersey().register(ioResource);
+		environment.jersey().register(IOResource.class);
+
+		// -- context dependencies injection --
+
+		environment.jersey().register(new AbstractBinder() {
+
+			@Override
+			protected void configure() {
+				bind(ctx).to(Context.class);
+				bind(env).to(Environment.class);
+				bind(objectService).to(ObjectService.class);
+				bind(jsonService).to(JsonService.class);
+				bind(tmpFileManager).to(TmpDirManager.class);
+				bind(Collections.newSetFromMap(
+					new ConcurrentHashMap<String, Boolean>())).to(
+						new TypeLiteral<Set<String>>()
+				{}).named("SERVING");
+			}
+
+		});
 	}
 
 	public void stop() throws Exception {
