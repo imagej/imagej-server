@@ -21,25 +21,10 @@
 
 package net.imagej.server.services;
 
-import java.util.concurrent.ConcurrentHashMap;
-
-import net.imagej.server.managers.TmpDirManager;
-
 /**
- * Service that handles concurrent Object registration and retrieval using UUID
- * Strings.
- * 
  * @author Leon Yang
  */
-public class ObjectService {
-
-	final private ConcurrentHashMap<String, Object> id2obj;
-	final private ConcurrentHashMap<Object, String> obj2id;
-
-	public ObjectService() {
-		id2obj = new ConcurrentHashMap<>();
-		obj2id = new ConcurrentHashMap<>();
-	}
+public interface ObjectService {
 
 	/**
 	 * Registers an Object if it does not exist yet.
@@ -47,17 +32,7 @@ public class ObjectService {
 	 * @param obj the Object to be registered.
 	 * @return the UUID of the registered Object.
 	 */
-	public String register(final Object obj) {
-		// NB: not actually UUID, but assume 16-bit random String could avoid
-		// collision. See implementation of randomString method for details.
-		final String uuid = TmpDirManager.randomString(16);
-		final String prev = obj2id.putIfAbsent(obj, uuid);
-
-		if (prev != null) return prev;
-
-		id2obj.put(uuid, obj);
-		return uuid;
-	}
+	String register(final Object obj);
 
 	/**
 	 * Retrieves the Object with the given UUID.
@@ -65,9 +40,7 @@ public class ObjectService {
 	 * @param uuid
 	 * @return Object with the given UUID
 	 */
-	public Object find(final String uuid) {
-		return id2obj.get(uuid);
-	}
+	Object find(final String uuid);
 
 	/**
 	 * Checks if exists an Object with the given UUID.
@@ -75,7 +48,5 @@ public class ObjectService {
 	 * @param uuid
 	 * @return true if such Object exists.
 	 */
-	public boolean contains(final String uuid) {
-		return id2obj.containsKey(uuid);
-	}
+	boolean contains(final String uuid);
 }

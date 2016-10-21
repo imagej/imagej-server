@@ -34,6 +34,8 @@ import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.resources.AdminResource;
 import net.imagej.server.resources.IOResource;
 import net.imagej.server.resources.ModulesResource;
+import net.imagej.server.services.DefaultJsonService;
+import net.imagej.server.services.DefaultObjectService;
 import net.imagej.server.services.JsonService;
 import net.imagej.server.services.ObjectService;
 
@@ -61,8 +63,8 @@ public class ImageJServerApplication extends
 
 	public ImageJServerApplication(final Context ctx) {
 		this.ctx = ctx;
-		objectService = new ObjectService();
-		jsonService = new JsonService(objectService);
+		objectService = new DefaultObjectService();
+		jsonService = new DefaultJsonService(objectService);
 	}
 
 	@Override
