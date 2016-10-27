@@ -1,0 +1,13 @@
+{
+	"int": 1,
+	"byte": 1,
+	"short": 1,
+	"long": 1,
+	"BigInteger": 123456789012345678901234567890,
+	"float": 1.5,
+	"double": 1.5,
+	"char": "c",
+	"String": "Hello world",
+	"boolean": true,
+	"list": [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+}
