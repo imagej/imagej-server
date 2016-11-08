@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -68,8 +69,6 @@ public class ModulesResource {
 	@Parameter
 	private ModuleService moduleService;
 
-	private final List<MInfo> mInfos = new ArrayList<>();
-
 	@Inject
 	private JsonService jsonService;
 
@@ -81,47 +80,17 @@ public class ModulesResource {
 	@Inject
 	public void initialize(final Context ctx) {
 		ctx.inject(this);
-
-		int index = 0;
-		for (final ModuleInfo info : moduleService.getModules()) {
-			final MInfo mInfo = new MInfo();
-			mInfo.info = info;
-			mInfo.index = index++;
-			if (info instanceof Identifiable) {
-				mInfo.identifier = ((Identifiable) info).getIdentifier();
-			}
-			mInfos.add(mInfo);
-		}
 	}
 
 	/**
-	 * @return a list of {@link MInfo}s
+	 * @return a list of module identifiers
 	 */
 	@GET
 	@Timed
-	public List<MInfo> retrieveModules() {
-		return mInfos;
-	}
-
-	/**
-	 * Retrieves the information of a module given its id. The id can be its index
-	 * in the mInfos list, or its identifier if any.
-	 *
-	 * @param id ID of the module
-	 * @return ModuleInfo of the module with the given ID, or null if not such
-	 *         module exists
-	 */
-	private ModuleInfo getModule(final String id) {
-		final ModuleInfo info = moduleService.getModuleById(id);
-		if (info != null) return info;
-		try {
-			final int index = Integer.parseInt(id) - 1;
-			return mInfos.get(index).info;
-		}
-		catch (final NumberFormatException exc) {
-			// NB: No action needed.
-		}
-		return null;
+	public List<String> retrieveModules() {
+		return moduleService.getModules().stream().filter((
+			m) -> m instanceof Identifiable).map((m) -> ((Identifiable) m)
+				.getIdentifier()).collect(Collectors.toList());
 	}
 
 	/**
@@ -133,7 +102,7 @@ public class ModulesResource {
 	@GET
 	@Path("{id}")
 	public MInfoLong getWidget(@PathParam("id") final String id) {
-		final ModuleInfo info = getModule(id);
+		final ModuleInfo info = moduleService.getModuleById(id);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
@@ -153,7 +122,7 @@ public class ModulesResource {
 	public String runModule(@PathParam("id") final String id,
 		final RunSpec runSpec)
 	{
-		final ModuleInfo info = getModule(id);
+		final ModuleInfo info = moduleService.getModuleById(id);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
@@ -186,13 +155,6 @@ public class ModulesResource {
 
 		public boolean process = true;
 		public Map<String, Object> inputs;
-	}
-
-	public static class MInfo {
-
-		public transient ModuleInfo info;
-		public long index;
-		public String identifier;
 	}
 
 	public static class MInfoLong {
