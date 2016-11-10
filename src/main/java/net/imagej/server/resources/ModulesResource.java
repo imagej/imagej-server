@@ -24,7 +24,6 @@ package net.imagej.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -49,7 +48,6 @@ import org.scijava.Identifiable;
 import org.scijava.Priority;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
-import org.scijava.module.ModuleItem;
 import org.scijava.module.ModuleService;
 import org.scijava.module.process.AbstractPreprocessorPlugin;
 import org.scijava.module.process.PreprocessorPlugin;
@@ -98,16 +96,19 @@ public class ModulesResource {
 	 *
 	 * @param id ID of the module
 	 * @return More detailed information of the module with the given ID
+	 * @throws JsonProcessingException
 	 */
 	@GET
 	@Path("{id}")
-	public MInfoLong getWidget(@PathParam("id") final String id) {
+	public String getWidget(@PathParam("id") final String id)
+		throws JsonProcessingException
+	{
 		final ModuleInfo info = moduleService.getModuleById(id);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
 		}
-		return new MInfoLong(info);
+		return jsonService.parseObject(info);
 	}
 
 	/**
@@ -155,41 +156,6 @@ public class ModulesResource {
 
 		public boolean process = true;
 		public Map<String, Object> inputs;
-	}
-
-	public static class MInfoLong {
-
-		public String identifier;
-		public String name;
-		public String label;
-		public List<MItem> inputs = new ArrayList<>();
-		public List<MItem> outputs = new ArrayList<>();
-
-		public MInfoLong(final ModuleInfo info) {
-			identifier = info instanceof Identifiable ? //
-				((Identifiable) info).getIdentifier() : null;
-			name = info.getName();
-			label = info.getLabel();
-			for (final ModuleItem<?> input : info.inputs()) {
-				inputs.add(new MItem(input));
-			}
-			for (final ModuleItem<?> output : info.outputs()) {
-				outputs.add(new MItem(output));
-			}
-		}
-	}
-
-	public static class MItem {
-
-		public String name;
-		public String label;
-		public List<?> choices;
-
-		public MItem(final ModuleItem<?> item) {
-			name = item.getName();
-			label = item.getLabel();
-			choices = item.getChoices();
-		}
 	}
 
 	// HACK: Initialize op when run as module

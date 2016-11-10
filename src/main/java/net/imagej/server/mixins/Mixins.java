@@ -23,14 +23,19 @@ package net.imagej.server.mixins;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
+import java.util.List;
 
 import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
+
+import org.scijava.module.ModuleInfo;
+import org.scijava.module.ModuleItem;
 
 /**
  * Jackson MixIns for some specific types in order to produce better output
@@ -40,7 +45,8 @@ import net.imglib2.type.numeric.RealType;
  */
 public class Mixins {
 
-	private static final Class<?>[] SUPPORT = { ComplexType.class };
+	private static final Class<?>[] SUPPORT = { ComplexType.class,
+		ModuleInfo.class, ModuleItem.class };
 
 	private Mixins() {}
 
@@ -90,9 +96,52 @@ public class Mixins {
 		public abstract long getIntegerLong();
 	}
 
+	@JsonAutoDetect(getterVisibility = Visibility.NONE,
+		isGetterVisibility = Visibility.NONE)
+	protected static abstract class ModuleInfoMixIn implements ModuleInfo {
+
+		@JsonProperty
+		public abstract String getIdentifier();
+
+		@Override
+		@JsonProperty
+		public abstract String getName();
+
+		@Override
+		@JsonProperty
+		public abstract String getLabel();
+
+		@Override
+		@JsonProperty("inputs")
+		public abstract List<ModuleItem<?>> inputs();
+
+		@Override
+		@JsonProperty("outputs")
+		public abstract List<ModuleItem<?>> outputs();
+	}
+
+	@JsonAutoDetect(getterVisibility = Visibility.NONE,
+		isGetterVisibility = Visibility.NONE)
+	protected static abstract class ModuleItemMixIn<T> implements ModuleItem<T> {
+
+		@Override
+		@JsonProperty
+		public abstract String getName();
+
+		@Override
+		@JsonProperty
+		public abstract String getLabel();
+
+		@Override
+		@JsonProperty
+		public abstract List<T> getChoices();
+	}
+
 	public static void registerMixIns(final ObjectMapper mapper) {
 		mapper.addMixIn(ComplexType.class, ToStringMixIn.class);
 		mapper.addMixIn(RealType.class, RealTypeMixIn.class);
 		mapper.addMixIn(IntegerType.class, IntegerTypeMixIn.class);
+		mapper.addMixIn(ModuleInfo.class, ModuleInfoMixIn.class);
+		mapper.addMixIn(ModuleItem.class, ModuleItemMixIn.class);
 	}
 }
