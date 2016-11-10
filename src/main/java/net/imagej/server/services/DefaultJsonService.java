@@ -118,6 +118,7 @@ public class DefaultJsonService implements JsonService {
 			public JsonSerializer<?> modifySerializer(SerializationConfig config,
 				BeanDescription beanDesc, JsonSerializer<?> serializer)
 			{
+				if (Mixins.support(beanDesc.getBeanClass())) return serializer;
 				// If the serialized class is unknown (i.e. serialized using the general
 				// BeanSerializer) or should not be serialized (i.e. complicated class
 				// implemented interfaces such as Iterable), would be serialized as an
