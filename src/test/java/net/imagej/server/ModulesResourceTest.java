@@ -47,20 +47,14 @@ import net.imagej.ops.special.hybrid.AbstractUnaryHybridCI;
 import net.imagej.ops.stats.DefaultSum;
 import net.imagej.server.resources.ModulesResource;
 import net.imagej.server.resources.ModulesResource.RunSpec;
-import net.imagej.server.services.DefaultJsonService;
-import net.imagej.server.services.DefaultObjectService;
-import net.imagej.server.services.JsonService;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.scijava.Context;
 import org.scijava.Identifiable;
 import org.scijava.ItemIO;
 import org.scijava.module.ModuleInfo;
@@ -73,29 +67,11 @@ import org.scijava.plugin.Plugin;
  * 
  * @author Leon Yang
  */
-public class ModulesResourceTest {
-
-	private static final Context ctx = new Context();
-
-	private static final JsonService jsonService = new DefaultJsonService(
-		new DefaultObjectService());
+public class ModulesResourceTest extends AbstractResourceTest {
 
 	@ClassRule
-	public static final ResourceTestRule resources = ResourceTestRule.builder()
-		.addProvider(new AbstractBinder()
-	{
-
-			@Override
-			protected void configure() {
-				bind(ctx).to(Context.class);
-				bind(jsonService).to(JsonService.class);
-			}
-		}).addProvider(ModulesResource.class).build();
-
-	@BeforeClass
-	public static void setup() {
-		jsonService.addDeserializerTo(resources.getObjectMapper());
-	}
+	public static final ResourceTestRule resources = resourcesBuilder.addProvider(
+		ModulesResource.class).build();
 
 	@Test
 	public void retrieveModules() {

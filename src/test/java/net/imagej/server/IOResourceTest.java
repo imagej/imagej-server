@@ -31,10 +31,7 @@ import io.scif.services.DatasetIOService;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,61 +39,23 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 
 import net.imagej.Dataset;
-import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.resources.IOResource;
-import net.imagej.server.services.DefaultJsonService;
-import net.imagej.server.services.DefaultObjectService;
-import net.imagej.server.services.JsonService;
-import net.imagej.server.services.ObjectService;
 
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.scijava.Context;
 
 /**
  * Test for {@link IOResource}.
  * 
  * @author Leon Yang
  */
-public class IOResourceTest {
-
-	private static final Context ctx = new Context();
-
-	private static final ObjectService objectService = new DefaultObjectService();
-
-	private static final JsonService jsonService = new DefaultJsonService(
-		objectService);
-
-	private static final TmpDirManager tmpDirManager = new TmpDirManager("/tmp");
-
-	private static final Set<String> serving = Collections.newSetFromMap(
-		new ConcurrentHashMap<>());
+public class IOResourceTest extends AbstractResourceTest {
 
 	@ClassRule
-	public static final ResourceTestRule resources = ResourceTestRule.builder()
-		.addProvider(new AbstractBinder()
-	{
-
-			@Override
-			protected void configure() {
-				bind(ctx).to(Context.class);
-				bind(objectService).to(ObjectService.class);
-				bind(jsonService).to(JsonService.class);
-				bind(tmpDirManager).to(TmpDirManager.class);
-				bind(serving).to(new TypeLiteral<Set<String>>() {}).named("SERVING");
-			}
-		}).addProvider(MultiPartFeature.class).addProvider(IOResource.class)
-		.build();
-
-	@BeforeClass
-	public static void setup() {
-		jsonService.addDeserializerTo(resources.getObjectMapper());
-	}
+	public static final ResourceTestRule resources = resourcesBuilder.addProvider(
+		MultiPartFeature.class).addProvider(IOResource.class).build();
 
 	/**
 	 * A integrated test for the workflow using IOResource:<br/>
