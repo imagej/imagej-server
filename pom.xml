@@ -3,18 +3,24 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>net.imagej</groupId>
-		<artifactId>pom-imagej</artifactId>
-		<version>16.5.0</version>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>12.0.0</version>
 		<relativePath />
 	</parent>
 
+	<groupId>net.imagej</groupId>
 	<artifactId>imagej-server</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
 	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
+	<url>http://imagej.net/ImageJ_Server</url>
 	<inceptionYear>2013</inceptionYear>
+	<organization>
+		<name>ImageJ</name>
+		<url>http://imagej.net/</url>
+	</organization>
 	<licenses>
 		<license>
 			<name>Apache 2</name>
@@ -45,6 +51,13 @@
 		</contributor>
 	</contributors>
 
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
 	<scm>
 		<connection>scm:git:git://github.com/imagej/imagej-server</connection>
 		<developerConnection>scm:git:git@github.com:imagej/imagej-server</developerConnection>
@@ -61,7 +74,12 @@
 	</ciManagement>
 
 	<properties>
+		<package-name>net.imagej.server</package-name>
 		<main-class>net.imagej.server.ImageJServerApplication</main-class>
+		<license.licenseName>apache_v2</license.licenseName>
+		<license.copyrightOwners>Board of Regents of the University of
+Wisconsin-Madison.</license.copyrightOwners>
+		<license.projectName>ImageJ server for RESTful access to ImageJ.</license.projectName>
 		<dropwizard.version>1.0.2</dropwizard.version>
 	</properties>
 
@@ -118,19 +136,4 @@
 			<artifactId>scijava-common</artifactId>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<configuration>
-					<licenseName>apache_v2</licenseName>
-					<organizationName>Board of Regents of the University of
-Wisconsin-Madison.</organizationName>
-					<projectName>ImageJ server for RESTful access to ImageJ.</projectName>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
