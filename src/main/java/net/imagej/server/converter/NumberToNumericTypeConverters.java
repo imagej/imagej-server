@@ -3,8 +3,7 @@
  * ImageJ server for RESTful access to ImageJ.
  * %%
  * Copyright (C) 2013 - 2016 Board of Regents of the University of
- * Wisconsin-Madison, Broad Institute of MIT and Harvard, and Max Planck
- * Institute of Molecular Cell Biology and Genetics.
+ * Wisconsin-Madison.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
