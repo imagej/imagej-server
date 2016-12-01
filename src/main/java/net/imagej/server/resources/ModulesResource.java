@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -121,7 +122,7 @@ public class ModulesResource {
 	@POST
 	@Path("{id}")
 	public String runModule(@PathParam("id") final String id,
-		final RunSpec runSpec)
+		@NotNull final RunSpec runSpec)
 	{
 		final ModuleInfo info = moduleService.getModuleById(id);
 		if (info == null) {
