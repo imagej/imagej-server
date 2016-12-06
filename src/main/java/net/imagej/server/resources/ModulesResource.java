@@ -24,10 +24,10 @@ package net.imagej.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -71,6 +71,8 @@ public class ModulesResource {
 	@Inject
 	private JsonService jsonService;
 
+	private LinkedHashMap<String, ModuleInfo> moduleCache;
+
 	/**
 	 * Initialize resource by injection. Should not be called directly.
 	 * 
@@ -79,6 +81,18 @@ public class ModulesResource {
 	@Inject
 	public void initialize(final Context ctx) {
 		ctx.inject(this);
+		updateModuleCache();
+	}
+
+	private void updateModuleCache() {
+		LinkedHashMap<String, ModuleInfo> tmp = new LinkedHashMap<>();
+		for (final ModuleInfo module : moduleService.getModules()) {
+			if (module instanceof Identifiable) {
+				tmp.put(((Identifiable) module).getIdentifier(), module);
+			}
+		}
+		// atomic update
+		moduleCache = tmp;
 	}
 
 	/**
@@ -86,10 +100,9 @@ public class ModulesResource {
 	 */
 	@GET
 	@Timed
-	public List<String> retrieveModules() {
-		return moduleService.getModules().stream().filter((
-			m) -> m instanceof Identifiable).map((m) -> ((Identifiable) m)
-				.getIdentifier()).collect(Collectors.toList());
+	public Set<String> retrieveModules() {
+		updateModuleCache();
+		return moduleCache.keySet();
 	}
 
 	/**
@@ -104,7 +117,7 @@ public class ModulesResource {
 	public String getWidget(@PathParam("id") final String id)
 		throws JsonProcessingException
 	{
-		final ModuleInfo info = moduleService.getModuleById(id);
+		final ModuleInfo info = moduleCache.getOrDefault(id, null);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
@@ -124,7 +137,7 @@ public class ModulesResource {
 	public String runModule(@PathParam("id") final String id,
 		@NotNull final RunSpec runSpec)
 	{
-		final ModuleInfo info = moduleService.getModuleById(id);
+		final ModuleInfo info = moduleCache.getOrDefault(id, null);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
