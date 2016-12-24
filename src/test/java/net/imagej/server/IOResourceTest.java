@@ -67,7 +67,7 @@ public class IOResourceTest extends AbstractResourceTest {
 	public void ioResource() {
 		try {
 			// Test uploadFile
-			final String imgID = uploadFile("imgs/icon.png").substring("_obj_"
+			final String imgID = uploadFile("imgs/about4.tif").substring("_obj_"
 				.length());
 			assertTrue(objectService.contains(imgID));
 
