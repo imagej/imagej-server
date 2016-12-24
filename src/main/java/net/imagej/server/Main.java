@@ -32,6 +32,7 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		final ImageJ ij = new ImageJ();
+		ij.ui().setHeadless(true);
 		final String[] arguments = args == null || args.length == 0 ? new String[] {
 			"server", "imagej-server.yml" } : args;
 		final ImageJServerApplication app = new ImageJServerApplication(ij
