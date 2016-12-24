@@ -1,4 +1,4 @@
-/*-
+/*
  * #%L
  * ImageJ server for RESTful access to ImageJ.
  * %%
@@ -18,21 +18,27 @@
  * limitations under the License.
  * #L%
  */
-package net.imagej.server;
 
-import org.junit.Test;
+package net.imagej.server.external;
+
+import net.imagej.ImageJService;
 
 /**
- * Placeholder test, so the Jenkins build passes. Real tests coming later.
- * <p>
- * The alternative was to remove the test publication step from the Jenkins job,
- * which would then need to be readded manually later.
- * </p>
+ * Interface for service that work with servers.
  * 
- * @author Curtis Rueden
+ * @author Leon Yang
  */
-public class PlaceholderTest {
+public interface ServerService extends ImageJService {
 
-	@Test
-	public void testNothing() {}
+	/**
+	 * Launch the server.
+	 * 
+	 * @param blocking if true, method will not return until server is stopped.
+	 */
+	void launch(final boolean blocking);
+
+	/**
+	 * Stops the server.
+	 */
+	void stop();
 }

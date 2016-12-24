@@ -31,7 +31,7 @@ APIs (try [Postman](https://www.getpostman.com/) if not already):
 
  Returns detailed information of a module
 
-- `curl -XPOST -H "Content-Type: application/json" -d '{"inputMap":{INPUTS}}' localhost:8080/modules/{id}`
+- `curl -XPOST -H "Content-Type: application/json" -d '{"inputs":{INPUTS}}' localhost:8080/modules/{id}`
 
  Executes a module with inputs from json
 
@@ -46,6 +46,10 @@ APIs (try [Postman](https://www.getpostman.com/) if not already):
 - `curl localhost:8080/io/FILENAME`
 
  Download the image with FILENAME form the server. The FILENAME must be the return value from the request download API call.
+
+- `curl localhost:8080/admin/stop`
+
+ Stop the imagej-server gracefully without shutting down the imagej runtime.
 
 ## Notes and memo
 

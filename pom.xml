@@ -75,7 +75,7 @@
 
 	<properties>
 		<package-name>net.imagej.server</package-name>
-		<main-class>net.imagej.server.ImageJServerApplication</main-class>
+		<main-class>net.imagej.server.Main</main-class>
 		<license.licenseName>apache_v2</license.licenseName>
 		<license.copyrightOwners>Board of Regents of the University of
 Wisconsin-Madison.</license.copyrightOwners>
@@ -135,5 +135,24 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.dropwizard</groupId>
+			<artifactId>dropwizard-testing</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.ow2.asm</groupId>
+					<artifactId>asm-debug-all</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.dropwizard</groupId>
+				<artifactId>dropwizard-testing</artifactId>
+				<version>${dropwizard.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

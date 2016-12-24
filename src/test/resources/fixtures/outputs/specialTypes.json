@@ -1,0 +1,12 @@
+{
+	"intType": 1,
+	"byteType": 1,
+	"shortType": 1,
+	"longType": 1,
+	"floatType": 1.5,
+	"doubleType": 1.5,
+	"complexDoubleType": "(1.5) + (2.5)i",
+	"img0": "_obj_0",
+	"img1": "_obj_1",
+	"foo": "_obj_2"
+}

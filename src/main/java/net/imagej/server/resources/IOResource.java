@@ -26,17 +26,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import io.scif.config.SCIFIOConfig;
+import io.scif.services.DatasetIOService;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -50,11 +50,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
+import net.imagej.DatasetService;
 import net.imagej.server.managers.TmpDirManager;
+import net.imagej.server.services.ObjectService;
+import net.imglib2.img.Img;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.scijava.Context;
+import org.scijava.plugin.Parameter;
 
 /**
  * Server resource for managing I/O operations, including:
@@ -68,33 +72,41 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(MediaType.APPLICATION_JSON)
 public class IOResource {
 
-	private final ImageJ ij;
+	@Parameter
+	private DatasetService datasetService;
 
-	/** Thread-safe list of datasets usable by the imagej runtime */
-	private final List<Dataset> datasets;
+	@Parameter
+	private DatasetIOService datasetIOService;
+
+	@Inject
+	private ObjectService objectService;
 
 	/** Thread-safe set of name of files that are currently served. */
-	private final Set<String> serving;
+	@Inject
+	@Named("SERVING")
+	private Set<String> serving;
 
-	private final TmpDirManager tmpDirManager;
+	@Inject
+	private TmpDirManager tmpDirManager;
 
 	private static final JsonNodeFactory factory = JsonNodeFactory.instance;
 
-	public IOResource(final ImageJ ij, final List<Dataset> datasets,
-		final TmpDirManager tmpDirManager)
-	{
-		this.ij = ij;
-		this.datasets = datasets;
-		this.tmpDirManager = tmpDirManager;
-		serving = Collections.newSetFromMap(new ConcurrentHashMap<>());
+	/**
+	 * Initialize resource by injection. Should not be called directly.
+	 * 
+	 * @param ctx
+	 */
+	@Inject
+	public void initialize(final Context ctx) {
+		ctx.inject(this);
 	}
 
 	/**
-	 * Store user-uploaded file to temp directory. Currently always assume the
-	 * file to be image.
+	 * Reads the user-uploaded file into the imagej runtime. Currently only
+	 * support images. An UUID representing the data is returned.
 	 *
 	 * @param fileInputStream file stream of the uploaded file
-	 * @return json node with format {"id":"_img_{IMG_ID}"}
+	 * @return JSON string with format {"uuid":"_obj_{UUID}"}
 	 */
 	@POST
 	@Path("file")
@@ -103,57 +115,77 @@ public class IOResource {
 	public JsonNode uploadFile(
 		@FormDataParam("file") final InputStream fileInputStream)
 	{
-		final String filename = tmpDirManager.randomString("io_upload", 10, "");
+		final String filename = TmpDirManager.randomString(8);
 		final java.nio.file.Path tmpFile = tmpDirManager.getFilePath(filename);
 
 		Dataset ds;
 		try {
-			// NB: Can we read the filestream into a dataset without saving it?
 			Files.copy(fileInputStream, tmpFile);
-			ds = ij.scifio().datasetIO().open(tmpFile.toString());
+			ds = datasetIOService.open(tmpFile.toString());
 		}
 		catch (final IOException exc) {
-			tmpFile.toFile().delete();
 			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
+		finally {
+			tmpFile.toFile().delete();
+		}
 
-		datasets.add(ds);
-		// not using size() for concurrency concern
-		final int idx = datasets.lastIndexOf(ds);
+		final String uuid = objectService.register(ds);
 
-		return factory.objectNode().set("id", factory.textNode("_img_" + idx));
+		return factory.objectNode().set("uuid", factory.textNode("_obj_" + uuid));
 	}
 
 	/**
-	 * Handles requests for downloading an image. A dataset is first stored into
-	 * disk, and then the file name is returned so that the client can download
-	 * the image in a separate API call.
+	 * Handles requests for downloading an image. A dataset is first stored on
+	 * disk for serving, and then the file name is returned so that the client can
+	 * download the image in a separate API call.
 	 *
 	 * @param id dataset ID
 	 * @param ext extension of the dataset to be saved with
 	 * @param config optional config for saving the image
-	 * @return json node with format {"filename":"{FILENAME}.{ext}"}
+	 * @return JSON node with format {"filename":"{FILENAME}.{ext}"}
 	 */
+	@SuppressWarnings("unchecked")
 	@POST
 	@Path("{id}")
 	@Timed
-	public JsonNode requestDataset(@PathParam("id") final String id,
+	public JsonNode requestFile(@PathParam("id") final String id,
 		@QueryParam("ext") @NotEmpty final String ext, final SCIFIOConfig config)
 	{
-		if (!id.startsWith("_img_")) {
-			throw new WebApplicationException("ID must start with \"_img_\"",
+		if (!id.startsWith("_obj_")) {
+			throw new WebApplicationException("ID must start with \"_obj_\"",
 				Status.BAD_REQUEST);
 		}
 
-		final int idx = Integer.parseInt(id.substring("_img_".length()));
+		final String uuid = id.substring(5);
 
-		final Dataset ds = datasets.get(idx);
-		final String filename = tmpDirManager.randomString("", 10, '.' + ext);
+		final Object obj = objectService.find(uuid);
+		if (obj == null) {
+			throw new WebApplicationException("Image does not exist");
+		}
+		if (!(obj instanceof Img)) {
+			throw new WebApplicationException("Object is not an image");
+		}
+
+		final Dataset ds;
+		if (obj instanceof Dataset) {
+			ds = (Dataset) obj;
+		}
+		else {
+			@SuppressWarnings({ "rawtypes" })
+			final Img img = (Img) obj;
+			ds = datasetService.create(img);
+		}
+
+		final String filename = String.format("%s.%s", TmpDirManager.randomString(
+			8), ext);
+		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
+
 		try {
-			ij.scifio().datasetIO().save(ds, tmpDirManager.getFilePath(filename)
-				.toString(), config);
+			datasetIOService.save(ds, filePath.toString(), config);
 		}
 		catch (final IOException exc) {
+			filePath.toFile().delete();
 			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
 
@@ -171,15 +203,13 @@ public class IOResource {
 	@Path("{filename}")
 	@Produces("image/*")
 	@Timed
-	public Response retrieveDataset(
-		@PathParam("filename") final String filename)
-	{
+	public Response retrieveFile(@PathParam("filename") final String filename) {
 		// Only allow downloading files we are currently serving
 		if (!serving.contains(filename)) {
 			throw new WebApplicationException(Status.NOT_FOUND);
 		}
 
-		final File file = new File(tmpDirManager.getFilePath(filename).toString());
+		final File file = tmpDirManager.getFilePath(filename).toFile();
 		final String mt = new MimetypesFileTypeMap().getContentType(file);
 		return Response.ok(file, mt).build();
 	}

@@ -22,12 +22,16 @@
 package net.imagej.server.resources;
 
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -37,17 +41,18 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imagej.ops.Initializable;
+import net.imagej.server.services.JsonService;
 
+import org.scijava.Context;
 import org.scijava.Identifiable;
 import org.scijava.Priority;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
-import org.scijava.module.ModuleItem;
+import org.scijava.module.ModuleService;
 import org.scijava.module.process.AbstractPreprocessorPlugin;
 import org.scijava.module.process.PreprocessorPlugin;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 /**
@@ -56,60 +61,48 @@ import org.scijava.plugin.Plugin;
  * @author Leon Yang
  */
 @Path("/modules")
+@Singleton
 @Produces(MediaType.APPLICATION_JSON)
 public class ModulesResource {
 
-	private final ImageJ ij;
+	@Parameter
+	private ModuleService moduleService;
 
-	/** Thread-safe list of datasets usable by the imagej runtime */
-	private final List<Dataset> datasets;
+	@Inject
+	private JsonService jsonService;
 
-	private final List<MInfo> mInfos = new ArrayList<>();
+	private LinkedHashMap<String, ModuleInfo> moduleCache;
 
-	public ModulesResource(final ImageJ ij, final List<Dataset> datasets) {
-		this.ij = ij;
-		this.datasets = datasets;
+	/**
+	 * Initialize resource by injection. Should not be called directly.
+	 * 
+	 * @param ctx
+	 */
+	@Inject
+	public void initialize(final Context ctx) {
+		ctx.inject(this);
+		updateModuleCache();
+	}
 
-		int index = 0;
-		for (final ModuleInfo info : ij.module().getModules()) {
-			final MInfo mInfo = new MInfo();
-			mInfo.info = info;
-			mInfo.index = index++;
-			if (info instanceof Identifiable) {
-				mInfo.identifier = ((Identifiable) info).getIdentifier();
+	private void updateModuleCache() {
+		LinkedHashMap<String, ModuleInfo> tmp = new LinkedHashMap<>();
+		for (final ModuleInfo module : moduleService.getModules()) {
+			if (module instanceof Identifiable) {
+				tmp.put(((Identifiable) module).getIdentifier(), module);
 			}
-			mInfos.add(mInfo);
 		}
+		// atomic update
+		moduleCache = tmp;
 	}
 
 	/**
-	 * @return a list of {@link MInfo}s
+	 * @return a list of module identifiers
 	 */
 	@GET
 	@Timed
-	public List<MInfo> retrieveModules() {
-		return mInfos;
-	}
-
-	/**
-	 * Retrieves the information of a module given its id. The id can be its index
-	 * in the mInfos list, or its identifier if any.
-	 *
-	 * @param id ID of the module
-	 * @return ModuleInfo of the module with the given ID, or null if not such
-	 *         module exists
-	 */
-	private ModuleInfo getModule(final String id) {
-		final ModuleInfo info = ij.module().getModuleById(id);
-		if (info != null) return info;
-		try {
-			final int index = Integer.parseInt(id) - 1;
-			return mInfos.get(index).info;
-		}
-		catch (final NumberFormatException exc) {
-			// NB: No action needed.
-		}
-		return null;
+	public Set<String> retrieveModules() {
+		updateModuleCache();
+		return moduleCache.keySet();
 	}
 
 	/**
@@ -117,61 +110,19 @@ public class ModulesResource {
 	 *
 	 * @param id ID of the module
 	 * @return More detailed information of the module with the given ID
+	 * @throws JsonProcessingException
 	 */
 	@GET
 	@Path("{id}")
-	public MInfoLong getWidget(@PathParam("id") final String id) {
-		final ModuleInfo info = getModule(id);
+	public String getWidget(@PathParam("id") final String id)
+		throws JsonProcessingException
+	{
+		final ModuleInfo info = moduleCache.getOrDefault(id, null);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
 		}
-		return new MInfoLong(info);
-	}
-
-	/**
-	 * Preprocess the inputs by substituting string inputs start with "_img_" by
-	 * its corresponding image stored in {@link #datasets}.
-	 *
-	 * @param inputs inputs to be preprocessed
-	 */
-	private void preprocess(final Map<String, Object> inputs) {
-		// substitute String with Dataset
-		for (final String key : inputs.keySet()) {
-			if (inputs.get(key) instanceof String) {
-				final String val = (String) inputs.get(key);
-				if (val.startsWith("_img_")) {
-					final int idx = Integer.parseInt(val.substring("_img_".length()));
-					if (idx < 0 || idx >= datasets.size()) {
-						final String msg = String.format("Dataset %s does not exist", val);
-						throw new WebApplicationException(msg, Status.BAD_REQUEST);
-					}
-					inputs.put(key, datasets.get(idx));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Postprocess the outputs by storing any dataset into {@link #datasets} and
-	 * substitute the output value with string "_img_{ID}" where ID is the index
-	 * of the dataset in {@link #datasets}.
-	 *
-	 * @param outputs outputs to be postprocessed
-	 */
-	private void postprocess(final Map<String, Object> outputs) {
-		// substitute Dataset with String
-		for (final String key : outputs.keySet()) {
-			if (outputs.get(key) instanceof Dataset) {
-				final Dataset ds = (Dataset) outputs.get(key);
-				int idx = datasets.indexOf(ds);
-				if (idx == -1) {
-					datasets.add(ds);
-					idx = datasets.lastIndexOf(ds);
-				}
-				outputs.put(key, "_img_" + idx);
-			}
-		}
+		return jsonService.parseObject(info);
 	}
 
 	/**
@@ -183,20 +134,18 @@ public class ModulesResource {
 	 */
 	@POST
 	@Path("{id}")
-	public Map<String, Object> runModule(@PathParam("id") final String id,
-		final RunSpec runSpec)
+	public String runModule(@PathParam("id") final String id,
+		@NotNull final RunSpec runSpec)
 	{
-		final ModuleInfo info = getModule(id);
+		final ModuleInfo info = moduleCache.getOrDefault(id, null);
 		if (info == null) {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
 		}
 
-		preprocess(runSpec.inputMap);
-
 		final Module m;
 		try {
-			m = ij.module().run(info, runSpec.process, runSpec.inputMap).get();
+			m = moduleService.run(info, runSpec.process, runSpec.inputs).get();
 		}
 		catch (final InterruptedException exc) {
 			throw new WebApplicationException(Status.INTERNAL_SERVER_ERROR);
@@ -206,9 +155,13 @@ public class ModulesResource {
 		}
 		final Map<String, Object> outputs = m.getOutputs();
 
-		postprocess(outputs);
-
-		return outputs;
+		try {
+			return jsonService.parseObject(outputs);
+		}
+		catch (final JsonProcessingException exc) {
+			throw new WebApplicationException("Fail to parse outputs", exc,
+				Status.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	// -- Helper classes --
@@ -216,53 +169,12 @@ public class ModulesResource {
 	public static class RunSpec {
 
 		public boolean process = true;
-		public Map<String, Object> inputMap;
-	}
-
-	public static class MInfo {
-
-		public transient ModuleInfo info;
-		public long index;
-		public String identifier;
-	}
-
-	public static class MInfoLong {
-
-		public String identifier;
-		public String name;
-		public String label;
-		public List<MItem> inputs = new ArrayList<>();
-		public List<MItem> outputs = new ArrayList<>();
-
-		public MInfoLong(final ModuleInfo info) {
-			identifier = info instanceof Identifiable ? //
-				((Identifiable) info).getIdentifier() : null;
-			name = info.getName();
-			label = info.getLabel();
-			for (final ModuleItem<?> input : info.inputs()) {
-				inputs.add(new MItem(input));
-			}
-			for (final ModuleItem<?> output : info.outputs()) {
-				outputs.add(new MItem(output));
-			}
-		}
-	}
-
-	public static class MItem {
-
-		public String name;
-		public String label;
-		public List<?> choices;
-
-		public MItem(final ModuleItem<?> item) {
-			name = item.getName();
-			label = item.getLabel();
-			choices = item.getChoices();
-		}
+		public Map<String, Object> inputs;
 	}
 
 	// HACK: Initialize op when run as module
-	@Plugin(type = PreprocessorPlugin.class, priority = Priority.HIGH_PRIORITY)
+	@Plugin(type = PreprocessorPlugin.class, priority = Priority.HIGH_PRIORITY -
+		1)
 	public static class InitializablePreprocessor extends
 		AbstractPreprocessorPlugin
 	{

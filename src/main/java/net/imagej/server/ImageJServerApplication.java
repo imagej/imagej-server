@@ -24,24 +24,25 @@ package net.imagej.server;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.scif.SCIFIOService;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import net.imagej.Dataset;
-import net.imagej.ImageJ;
-import net.imagej.ImageJService;
-import net.imagej.ops.OpService;
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.managers.TmpDirManager;
-import net.imagej.server.mixins.Mixins;
+import net.imagej.server.resources.AdminResource;
 import net.imagej.server.resources.IOResource;
 import net.imagej.server.resources.ModulesResource;
+import net.imagej.server.services.DefaultJsonService;
+import net.imagej.server.services.DefaultObjectService;
+import net.imagej.server.services.JsonService;
+import net.imagej.server.services.ObjectService;
 
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.scijava.Context;
-import org.scijava.service.SciJavaService;
 
 /**
  * Entry point to imagej-server.
@@ -52,20 +53,19 @@ public class ImageJServerApplication extends
 	Application<ImageJServerConfiguration>
 {
 
-	public static void main(final String[] args) throws Exception {
-		final String[] arguments = args == null || args.length == 0 ? //
-			new String[] { "server", "imagej-server.yml" } : args;
-		new ImageJServerApplication().run(arguments);
+	private final Context ctx;
+
+	private final ObjectService objectService;
+
+	private final JsonService jsonService;
+
+	private Environment env;
+
+	public ImageJServerApplication(final Context ctx) {
+		this.ctx = ctx;
+		objectService = new DefaultObjectService();
+		jsonService = new DefaultJsonService(objectService);
 	}
-
-	private ImageJ ij;
-
-	/**
-	 * A list storing datasets uploaded by the clients or created during runtime.
-	 * This list should be thread-safe as it could be accessed and modified by
-	 * multiple API requests concurrently.
-	 */
-	private List<Dataset> datasetRepo;
 
 	@Override
 	public String getName() {
@@ -74,24 +74,19 @@ public class ImageJServerApplication extends
 
 	@Override
 	public void initialize(final Bootstrap<ImageJServerConfiguration> bootstrap) {
-		ij = new ImageJ(new Context(SciJavaService.class, SCIFIOService.class,
-			ImageJService.class, OpService.class));
-		// HACK: better way to set imagej headless?
-		ij.ui().setHeadless(true);
-		datasetRepo = new CopyOnWriteArrayList<>();
+		jsonService.addDeserializerTo(bootstrap.getObjectMapper());
 	}
 
 	@Override
 	public void run(final ImageJServerConfiguration configuration,
 		final Environment environment)
 	{
+		env = environment;
+
 		// NB: not implemented yet
 		final ImageJServerHealthCheck healthCheck = new ImageJServerHealthCheck();
 		environment.healthChecks().register("imagej-server", healthCheck);
 
-		// register Jackson MixIns to obtain better json output format for some
-		// specific types
-		Mixins.registerMixIns(environment.getObjectMapper());
 		environment.jersey().register(MultiPartFeature.class);
 
 		// -- lifecycle managers --
@@ -101,13 +96,40 @@ public class ImageJServerApplication extends
 		environment.lifecycle().manage(tmpFileManager);
 
 		// -- resources --
+		
+		environment.jersey().register(AdminResource.class);
 
-		final ModulesResource modulesResource = new ModulesResource(ij,
-			datasetRepo);
-		environment.jersey().register(modulesResource);
+		environment.jersey().register(ModulesResource.class);
 
-		final IOResource ioResource = new IOResource(ij, datasetRepo,
-			tmpFileManager);
-		environment.jersey().register(ioResource);
+		environment.jersey().register(IOResource.class);
+
+		// -- context dependencies injection --
+
+		environment.jersey().register(new AbstractBinder() {
+
+			@Override
+			protected void configure() {
+				bind(ctx).to(Context.class);
+				bind(env).to(Environment.class);
+				bind(objectService).to(ObjectService.class);
+				bind(jsonService).to(JsonService.class);
+				bind(tmpFileManager).to(TmpDirManager.class);
+				bind(Collections.newSetFromMap(
+					new ConcurrentHashMap<String, Boolean>())).to(
+						new TypeLiteral<Set<String>>()
+				{}).named("SERVING");
+			}
+
+		});
+	}
+
+	public void stop() throws Exception {
+		if (env == null) return;
+		env.getApplicationContext().getServer().stop();
+	}
+
+	public void join() throws InterruptedException {
+		if (env == null) return;
+		env.getApplicationContext().getServer().join();
 	}
 }
