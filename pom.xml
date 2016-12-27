@@ -44,6 +44,14 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>lnyng</id>
+			<name>Leon Yang</name>
+			<url>http://imagej.net/User:Leon</url>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
 	</developers>
 	<contributors>
 		<contributor>
