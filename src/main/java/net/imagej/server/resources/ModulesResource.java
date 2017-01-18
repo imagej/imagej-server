@@ -31,12 +31,13 @@ import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.validation.constraints.NotNull;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
@@ -129,13 +130,15 @@ public class ModulesResource {
 	 * Executes a module with given ID.
 	 *
 	 * @param id ID of the module to execute
-	 * @param runSpec specification of this execution
+	 * @param inputs inputs to the execution
+	 * @param process true if the execution should be pre/post processed
 	 * @return a map of outputs
 	 */
 	@POST
 	@Path("{id}")
 	public String runModule(@PathParam("id") final String id,
-		@NotNull final RunSpec runSpec)
+		final Map<String, Object> inputs,
+		@DefaultValue("true") @QueryParam("process") final boolean process)
 	{
 		final ModuleInfo info = moduleCache.getOrDefault(id, null);
 		if (info == null) {
@@ -145,7 +148,7 @@ public class ModulesResource {
 
 		final Module m;
 		try {
-			m = moduleService.run(info, runSpec.process, runSpec.inputs).get();
+			m = moduleService.run(info, process, inputs).get();
 		}
 		catch (final InterruptedException exc) {
 			throw new WebApplicationException(Status.INTERNAL_SERVER_ERROR);
@@ -165,12 +168,6 @@ public class ModulesResource {
 	}
 
 	// -- Helper classes --
-
-	public static class RunSpec {
-
-		public boolean process = true;
-		public Map<String, Object> inputs;
-	}
 
 	// HACK: Initialize op when run as module
 	@Plugin(type = PreprocessorPlugin.class, priority = Priority.HIGH_PRIORITY -

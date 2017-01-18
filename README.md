@@ -37,7 +37,7 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
  Returns detailed information of a module
 
-- `curl -XPOST -H "Content-Type: application/json" -d '{"inputs":{INPUTS}}' localhost:8080/modules/{id}`
+- `curl -XPOST -H "Content-Type: application/json" -d '{INPUTS}' localhost:8080/modules/{id}?[process=PROCESS]`
 
  Executes a module with inputs from json
 

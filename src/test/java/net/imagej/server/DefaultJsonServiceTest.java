@@ -33,10 +33,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import net.imagej.ops.create.img.Imgs;
-import net.imagej.server.resources.ModulesResource;
-import net.imagej.server.resources.ModulesResource.RunSpec;
 import net.imagej.server.services.DefaultJsonService;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
@@ -83,11 +82,11 @@ public class DefaultJsonServiceTest {
 		inputs.put("listOfOnes", Arrays.asList(1, 1, 1, 1, 1));
 		inputs.put("simpleMap", Collections.singletonMap("key", "value"));
 
-		final RunSpec deserialized = modifiedMapper.readValue(fixture(
-			"fixtures/runSpec/basicTypes.json"), ModulesResource.RunSpec.class);
+		@SuppressWarnings("unchecked")
+		final Map<String, Object> deserialized = modifiedMapper.readValue(fixture(
+			"fixtures/inputs/basicTypes.json"), Map.class);
 
-		assertEquals(deserialized.process, false);
-		assertEquals(deserialized.inputs, inputs);
+		assertEquals(deserialized, inputs);
 	}
 
 	@Test
@@ -106,10 +105,11 @@ public class DefaultJsonServiceTest {
 		objectService.register(img1);
 		objectService.register(foo);
 
-		final RunSpec deserialized = modifiedMapper.readValue(fixture(
-			"fixtures/runSpec/specialTypes.json"), ModulesResource.RunSpec.class);
+		@SuppressWarnings("unchecked")
+		final Map<String, Object> deserialized = modifiedMapper.readValue(fixture(
+			"fixtures/inputs/specialTypes.json"), Map.class);
 
-		assertEquals(deserialized.inputs, inputs);
+		assertEquals(deserialized, inputs);
 	}
 
 	@Test
