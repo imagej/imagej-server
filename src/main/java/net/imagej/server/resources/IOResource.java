@@ -51,6 +51,7 @@ import javax.ws.rs.core.Response.Status;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
+import net.imagej.server.Utils;
 import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
@@ -115,7 +116,7 @@ public class IOResource {
 	public JsonNode uploadFile(
 		@FormDataParam("file") final InputStream fileInputStream)
 	{
-		final String filename = TmpDirManager.randomString(8);
+		final String filename = Utils.randomString(8);
 		final java.nio.file.Path tmpFile = tmpDirManager.getFilePath(filename);
 
 		Dataset ds;
@@ -178,8 +179,8 @@ public class IOResource {
 			ds = datasetService.create(img);
 		}
 
-		final String filename = String.format("%s.%s", TmpDirManager.randomString(
-			8), format);
+		final String filename = String.format("%s.%s", Utils.randomString(8),
+			format);
 		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
 
 		try {

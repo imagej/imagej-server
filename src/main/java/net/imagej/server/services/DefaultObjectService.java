@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.imagej.server.managers.TmpDirManager;
+import net.imagej.server.Utils;
 
 /**
  * Service that handles concurrent Object registration and retrieval using IDs.
@@ -60,7 +60,7 @@ public class DefaultObjectService implements ObjectService {
 	public String register(final Object obj) {
 		// Assume a 16-bit random String could avoid collision.
 		// See implementation of randomString method for details.
-		final String id = TmpDirManager.randomString(16);
+		final String id = Utils.randomString(16);
 		final String prev = obj2id.putIfAbsent(obj, id);
 
 		if (prev != null) return prev;
