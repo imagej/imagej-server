@@ -106,7 +106,7 @@ public class IOResource {
 	 * support images. An ID representing the data is returned.
 	 *
 	 * @param fileInputStream file stream of the uploaded file
-	 * @return JSON string with format {"id":"_obj_{ID}"}
+	 * @return JSON string with format {"id":"object:{ID}"}
 	 */
 	@POST
 	@Path("file")
@@ -132,7 +132,7 @@ public class IOResource {
 
 		final String id = objectService.register(ds);
 
-		return factory.objectNode().set("id", factory.textNode("_obj_" + id));
+		return factory.objectNode().set("id", factory.textNode("object:" + id));
 	}
 
 	/**
@@ -152,12 +152,12 @@ public class IOResource {
 	public JsonNode requestFile(@PathParam("id") final String objectId,
 		@QueryParam("ext") @NotEmpty final String ext, final SCIFIOConfig config)
 	{
-		if (!objectId.startsWith("_obj_")) {
-			throw new WebApplicationException("ID must start with \"_obj_\"",
+		if (!objectId.startsWith("object:")) {
+			throw new WebApplicationException("ID must start with \"object:\"",
 				Status.BAD_REQUEST);
 		}
 
-		final String id = objectId.substring(5);
+		final String id = objectId.substring("object:".length());
 
 		final Object obj = objectService.find(id);
 		if (obj == null) {

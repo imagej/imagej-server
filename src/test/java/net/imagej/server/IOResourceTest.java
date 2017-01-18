@@ -67,12 +67,12 @@ public class IOResourceTest extends AbstractResourceTest {
 	public void ioResource() {
 		try {
 			// Test uploadFile
-			final String imgID = uploadFile("imgs/about4.tif").substring("_obj_"
+			final String imgID = uploadFile("imgs/about4.tif").substring("object:"
 				.length());
 			assertTrue(objectService.contains(imgID));
 
 			// Test requestFile
-			final String filename = requestFile("_obj_" + imgID, "tiff");
+			final String filename = requestFile("object:" + imgID, "tiff");
 			assertTrue(serving.contains(filename));
 
 			// Test retrieveFile
