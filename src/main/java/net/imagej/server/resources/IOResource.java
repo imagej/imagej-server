@@ -31,10 +31,10 @@ import io.scif.services.DatasetIOService;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.Set;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
@@ -202,7 +202,6 @@ public class IOResource {
 	 */
 	@GET
 	@Path("{filename}")
-	@Produces("image/*")
 	@Timed
 	public Response retrieveFile(@PathParam("filename") final String filename) {
 		// Only allow downloading files we are currently serving
@@ -211,7 +210,7 @@ public class IOResource {
 		}
 
 		final File file = tmpDirManager.getFilePath(filename).toFile();
-		final String mt = new MimetypesFileTypeMap().getContentType(file);
+		final String mt = URLConnection.guessContentTypeFromName(filename);
 		return Response.ok(file, mt).build();
 	}
 }
