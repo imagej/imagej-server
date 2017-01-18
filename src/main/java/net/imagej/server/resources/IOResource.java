@@ -211,6 +211,7 @@ public class IOResource {
 
 		final File file = tmpDirManager.getFilePath(filename).toFile();
 		final String mt = URLConnection.guessContentTypeFromName(filename);
-		return Response.ok(file, mt).build();
+		return Response.ok(file, mt).header("Content-Length", file.length())
+			.build();
 	}
 }
