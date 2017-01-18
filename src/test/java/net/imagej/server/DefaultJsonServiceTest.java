@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import net.imagej.ops.create.img.Imgs;
 import net.imagej.server.services.DefaultJsonService;
@@ -179,6 +180,11 @@ public class DefaultJsonServiceTest {
 	private static class ListObjectService implements ObjectService {
 
 		private final ArrayList<Object> list = new ArrayList<>();
+
+		@Override
+		public Set<String> getIds() {
+			return null;
+		}
 
 		@Override
 		public String register(Object obj) {

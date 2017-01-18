@@ -30,6 +30,8 @@
 
 package net.imagej.server.services;
 
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.imagej.server.managers.TmpDirManager;
@@ -47,6 +49,11 @@ public class DefaultObjectService implements ObjectService {
 	public DefaultObjectService() {
 		id2obj = new ConcurrentHashMap<>();
 		obj2id = new ConcurrentHashMap<>();
+	}
+
+	@Override
+	public Set<String> getIds() {
+		return Collections.unmodifiableSet(id2obj.keySet());
 	}
 
 	@Override

@@ -21,10 +21,19 @@
 
 package net.imagej.server.services;
 
+import java.util.Set;
+
 /**
  * @author Leon Yang
  */
 public interface ObjectService {
+
+	/**
+	 * Gets a set of all IDs.
+	 * 
+	 * @return a set of all IDs
+	 */
+	Set<String> getIds();
 
 	/**
 	 * Registers an Object if it does not exist yet.
