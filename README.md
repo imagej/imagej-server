@@ -53,7 +53,7 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
  Download the image with FILENAME form the server. The FILENAME must be the return value from the request download API call.
 
-- `curl localhost:8080/admin/stop`
+- `curl -XDELETE localhost:8080/admin/stop`
 
  Stop the imagej-server gracefully without shutting down the imagej runtime.
 
