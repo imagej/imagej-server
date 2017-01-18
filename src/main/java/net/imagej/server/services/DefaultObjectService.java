@@ -35,8 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.imagej.server.managers.TmpDirManager;
 
 /**
- * Service that handles concurrent Object registration and retrieval using UUID
- * Strings.
+ * Service that handles concurrent Object registration and retrieval using IDs.
  * 
  * @author Leon Yang
  */
@@ -52,24 +51,24 @@ public class DefaultObjectService implements ObjectService {
 
 	@Override
 	public String register(final Object obj) {
-		// NB: not actually UUID, but assume 16-bit random String could avoid
-		// collision. See implementation of randomString method for details.
-		final String uuid = TmpDirManager.randomString(16);
-		final String prev = obj2id.putIfAbsent(obj, uuid);
+		// Assume a 16-bit random String could avoid collision.
+		// See implementation of randomString method for details.
+		final String id = TmpDirManager.randomString(16);
+		final String prev = obj2id.putIfAbsent(obj, id);
 
 		if (prev != null) return prev;
 
-		id2obj.put(uuid, obj);
-		return uuid;
+		id2obj.put(id, obj);
+		return id;
 	}
 
 	@Override
-	public Object find(final String uuid) {
-		return id2obj.get(uuid);
+	public Object find(final String id) {
+		return id2obj.get(id);
 	}
 
 	@Override
-	public boolean contains(final String uuid) {
-		return id2obj.containsKey(uuid);
+	public boolean contains(final String id) {
+		return id2obj.containsKey(id);
 	}
 }

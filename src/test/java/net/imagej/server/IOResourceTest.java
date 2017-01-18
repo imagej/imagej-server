@@ -97,7 +97,7 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * Upload file to IOResource
 	 * 
 	 * @param file
-	 * @return the UUID of that file
+	 * @return the object ID of that file
 	 * @throws IOException
 	 */
 	public String uploadFile(final String file) throws IOException {
@@ -108,7 +108,7 @@ public class IOResourceTest extends AbstractResourceTest {
 			final String response = resources.client().register(
 				MultiPartFeature.class).target("/io/file").request().post(Entity.entity(
 					multiPart, multiPart.getMediaType()), String.class);
-			final Matcher matcher = Pattern.compile("\\{\"uuid\":\"([^\"]+)\"\\}")
+			final Matcher matcher = Pattern.compile("\\{\"id\":\"([^\"]+)\"\\}")
 				.matcher(response);
 			assertTrue(matcher.find());
 			return matcher.group(1);
@@ -118,12 +118,12 @@ public class IOResourceTest extends AbstractResourceTest {
 	/**
 	 * Request download of a file in a specific format
 	 * 
-	 * @param id UUID of the file
+	 * @param objectId ID of the file
 	 * @param ext format of the file to be saved
 	 * @return filename token for downloading the requested file
 	 */
-	public String requestFile(final String id, final String ext) {
-		final String response = resources.client().target("/io/" + id).queryParam(
+	public String requestFile(final String objectId, final String ext) {
+		final String response = resources.client().target("/io/" + objectId).queryParam(
 			"ext", ext).request().post(null, String.class);
 		final Matcher matcher = Pattern.compile("\\{\"filename\":\"([^\"]+)\"\\}")
 			.matcher(response);

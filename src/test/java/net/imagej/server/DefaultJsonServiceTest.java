@@ -170,9 +170,9 @@ public class DefaultJsonServiceTest {
 	// -- helper class --
 
 	/**
-	 * ObjectService for testing that generates predictable uuids when registering
+	 * ObjectService for testing that generates predictable IDs when registering
 	 * an object. However, the same object should not be registered twice,
-	 * otherwise different uuids will be returned.
+	 * otherwise different IDs will be returned.
 	 * 
 	 * @author Leon Yang
 	 */
@@ -187,13 +187,13 @@ public class DefaultJsonServiceTest {
 		}
 
 		@Override
-		public Object find(String uuid) {
-			return list.get(Integer.valueOf(uuid));
+		public Object find(String id) {
+			return list.get(Integer.valueOf(id));
 		}
 
 		@Override
-		public boolean contains(String uuid) {
-			return Integer.valueOf(uuid) < list.size();
+		public boolean contains(String id) {
+			return Integer.valueOf(id) < list.size();
 		}
 
 	}

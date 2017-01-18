@@ -103,10 +103,10 @@ public class IOResource {
 
 	/**
 	 * Reads the user-uploaded file into the imagej runtime. Currently only
-	 * support images. An UUID representing the data is returned.
+	 * support images. An ID representing the data is returned.
 	 *
 	 * @param fileInputStream file stream of the uploaded file
-	 * @return JSON string with format {"uuid":"_obj_{UUID}"}
+	 * @return JSON string with format {"id":"_obj_{ID}"}
 	 */
 	@POST
 	@Path("file")
@@ -130,9 +130,9 @@ public class IOResource {
 			tmpFile.toFile().delete();
 		}
 
-		final String uuid = objectService.register(ds);
+		final String id = objectService.register(ds);
 
-		return factory.objectNode().set("uuid", factory.textNode("_obj_" + uuid));
+		return factory.objectNode().set("id", factory.textNode("_obj_" + id));
 	}
 
 	/**
@@ -140,7 +140,7 @@ public class IOResource {
 	 * disk for serving, and then the file name is returned so that the client can
 	 * download the image in a separate API call.
 	 *
-	 * @param id dataset ID
+	 * @param objectId dataset ID
 	 * @param ext extension of the dataset to be saved with
 	 * @param config optional config for saving the image
 	 * @return JSON node with format {"filename":"{FILENAME}.{ext}"}
@@ -149,17 +149,17 @@ public class IOResource {
 	@POST
 	@Path("{id}")
 	@Timed
-	public JsonNode requestFile(@PathParam("id") final String id,
+	public JsonNode requestFile(@PathParam("id") final String objectId,
 		@QueryParam("ext") @NotEmpty final String ext, final SCIFIOConfig config)
 	{
-		if (!id.startsWith("_obj_")) {
+		if (!objectId.startsWith("_obj_")) {
 			throw new WebApplicationException("ID must start with \"_obj_\"",
 				Status.BAD_REQUEST);
 		}
 
-		final String uuid = id.substring(5);
+		final String id = objectId.substring(5);
 
-		final Object obj = objectService.find(uuid);
+		final Object obj = objectService.find(id);
 		if (obj == null) {
 			throw new WebApplicationException("Image does not exist");
 		}
