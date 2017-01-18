@@ -45,9 +45,9 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
  Uploads an image to server. id of the uploaded image will be return in form of `{"id":"_img_ID"}` The id will be used in module execution to represent the image.
 
-- `curl -XPOST localhost:8080/io/_img_ID?ext=EXTENSION`
+- `curl -XPOST localhost:8080/io/_img_ID?format=FORMAT`
 
- Request download of image specified by ID. The image will be saved into a file in imagej-server side with EXTENSION. The filename is returned.
+ Request download of image specified by ID. The image will be saved into a file in imagej-server side with FORMAT. The filename is returned.
 
 - `curl localhost:8080/io/FILENAME`
 

@@ -141,16 +141,17 @@ public class IOResource {
 	 * download the image in a separate API call.
 	 *
 	 * @param objectId dataset ID
-	 * @param ext extension of the dataset to be saved with
+	 * @param format format of the dataset to be saved with
 	 * @param config optional config for saving the image
-	 * @return JSON node with format {"filename":"{FILENAME}.{ext}"}
+	 * @return JSON node in the form of {"filename":"{FILENAME}.{format}"}
 	 */
 	@SuppressWarnings("unchecked")
 	@POST
 	@Path("{id}")
 	@Timed
 	public JsonNode requestFile(@PathParam("id") final String objectId,
-		@QueryParam("ext") @NotEmpty final String ext, final SCIFIOConfig config)
+		@QueryParam("format") @NotEmpty final String format,
+		final SCIFIOConfig config)
 	{
 		if (!objectId.startsWith("object:")) {
 			throw new WebApplicationException("ID must start with \"object:\"",
@@ -178,7 +179,7 @@ public class IOResource {
 		}
 
 		final String filename = String.format("%s.%s", TmpDirManager.randomString(
-			8), ext);
+			8), format);
 		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
 
 		try {

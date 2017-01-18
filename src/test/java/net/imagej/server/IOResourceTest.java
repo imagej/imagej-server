@@ -119,12 +119,12 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * Request download of a file in a specific format
 	 * 
 	 * @param objectId ID of the file
-	 * @param ext format of the file to be saved
+	 * @param format format of the file to be saved
 	 * @return filename token for downloading the requested file
 	 */
-	public String requestFile(final String objectId, final String ext) {
+	public String requestFile(final String objectId, final String format) {
 		final String response = resources.client().target("/io/" + objectId).queryParam(
-			"ext", ext).request().post(null, String.class);
+			"format", format).request().post(null, String.class);
 		final Matcher matcher = Pattern.compile("\\{\"filename\":\"([^\"]+)\"\\}")
 			.matcher(response);
 		assertTrue(matcher.find());
