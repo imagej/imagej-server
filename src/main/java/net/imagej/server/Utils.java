@@ -71,4 +71,14 @@ public class Utils {
 		return Long.toUnsignedString(System.currentTimeMillis(), 36);
 	}
 
+	/**
+	 * Generates a (8+n) bit alphanumeric lowercase random ID. The first eight
+	 * digits encode the timestamp.
+	 * 
+	 * @return a timestamped random ID
+	 */
+	public static String timestampedId(final int n) {
+		return timestampString() + randomString(n);
+	}
+
 }

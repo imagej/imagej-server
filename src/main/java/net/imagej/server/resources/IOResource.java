@@ -179,7 +179,7 @@ public class IOResource {
 			ds = datasetService.create(img);
 		}
 
-		final String filename = String.format("%s.%s", Utils.randomString(8),
+		final String filename = String.format("%s.%s", Utils.timestampedId(8),
 			format);
 		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
 
