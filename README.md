@@ -12,16 +12,22 @@ It is currently only a prototype! Testing needed!
 To start the server from the CLI, use:
 
 ```
-mvn -Pexec
+mvn exec:java -Dexec.mainClass="net.imagej.server.Main"
 ```
 
-Or from an IDE, execute the class `net.imagej.server.ImageJServerApplication`.
+Or from an IDE, execute the class `net.imagej.server.Main`.
 
 On some systems, you may need to change the value of `tmpDir` in `imagej-server.yml`.
 
 ## Usage
 
-APIs (try [Postman](https://www.getpostman.com/) if not already):
+### [Interactive Client in Python](clients/python)
+
+Uses a Python wrapper for the web API. Clients for more languages are coming. 
+
+### APIs
+
+(try [Postman](https://www.getpostman.com/) if not already):
 
 - `curl localhost:8080/modules`
 
@@ -47,7 +53,7 @@ APIs (try [Postman](https://www.getpostman.com/) if not already):
 
  Download the image with FILENAME form the server. The FILENAME must be the return value from the request download API call.
 
-- `curl localhost:8080/admin/stop`
+- `curl -XDELETE localhost:8080/admin/stop`
 
  Stop the imagej-server gracefully without shutting down the imagej runtime.
 
