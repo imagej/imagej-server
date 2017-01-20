@@ -53,6 +53,14 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
  Executes a module with `INPUTS` in JSON format. The optional query parameter `process` determines if the execution should be pre/post processed.
 
+- `curl HOST/io/objects`
+
+ Lists all object IDs available on imagej-server.
+
+- `curl HOST/io/files`
+
+ Lists all files being served by imagej-server.
+
 - `curl -F "file=@PATH/TO/FILE" HOST/io/file`
   - example:
 
