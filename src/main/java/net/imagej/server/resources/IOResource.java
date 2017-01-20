@@ -103,6 +103,28 @@ public class IOResource {
 	}
 
 	/**
+	 * Lists all object IDs on the imagej-server.
+	 * 
+	 * @return a list of object IDs
+	 */
+	@GET
+	@Path("objects")
+	public Set<String> getIds() {
+		return objectService.getIds();
+	}
+
+	/**
+	 * List all files being served on the imagej-server.
+	 * 
+	 * @return a list of filenames
+	 */
+	@GET
+	@Path("files")
+	public Set<String> getServing() {
+		return serving;
+	}
+
+	/**
 	 * Reads the user-uploaded file into the imagej runtime. Currently only
 	 * support images. An ID representing the data is returned.
 	 *
