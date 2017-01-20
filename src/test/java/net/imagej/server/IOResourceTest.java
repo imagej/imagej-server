@@ -123,7 +123,7 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * @return filename token for downloading the requested file
 	 */
 	public String requestFile(final String objectId, final String format) {
-		final String response = resources.client().target("/io/" + objectId).queryParam(
+		final String response = resources.client().target("/io/file/" + objectId).queryParam(
 			"format", format).request().post(null, String.class);
 		final Matcher matcher = Pattern.compile("\\{\"filename\":\"([^\"]+)\"\\}")
 			.matcher(response);
@@ -138,7 +138,7 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * @return the downloaded file
 	 */
 	public File retrieveFile(final String filename) {
-		return resources.client().target("/io/" + filename).request().get(
+		return resources.client().target("/io/file/" + filename).request().get(
 			File.class);
 	}
 }
