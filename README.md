@@ -96,6 +96,7 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
 ## Notes and memo
 
+- DefaultObjectService effectively prevents garbage collection of all objects produced during the lifetime of this imagej-server instance, which could lead to serious memory issues. The timestamped object ID could be used to determine if an object should "expire" on a regular basis or when memory runs low. 
 - Ops that need to be initialized are not working when run as module. See the HACK in `ModulesResource`
 - The converters from `Number` to `NumericType` could be refined and considered moving to other projects such as SciJava.
 - Do we have better ways to do the I/O? such that no file is needed to store to the disk?
