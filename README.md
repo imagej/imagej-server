@@ -63,7 +63,7 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
  Uploads a file to server and a 16-bit lowercase alphanumeric ID with prefix `object:` will be returned as a JSON string. The ID will be used in module execution to represent the file. Currently only supports uploading images.
 
-- `curl -XPOST HOST/io/ID?format=FORMAT`
+- `curl -XPOST HOST/io/file/ID?format=FORMAT`
   - example:
 
     ```
@@ -73,7 +73,7 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
  Request download of a file specified by ID. The object will be saved into a file on the imagej-server side with FORMAT. The filename is returned.
 
-- `curl -O HOST/io/FILENAME`
+- `curl -O HOST/io/file/FILENAME`
   - example:
 
     ```

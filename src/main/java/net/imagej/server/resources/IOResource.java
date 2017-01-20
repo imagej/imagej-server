@@ -148,7 +148,7 @@ public class IOResource {
 	 */
 	@SuppressWarnings("unchecked")
 	@POST
-	@Path("{id}")
+	@Path("file/{id}")
 	@Timed
 	public JsonNode requestFile(@PathParam("id") final String objectId,
 		@QueryParam("format") @NotEmpty final String format,
@@ -202,7 +202,7 @@ public class IOResource {
 	 * @return Response with the file as entity
 	 */
 	@GET
-	@Path("{filename}")
+	@Path("file/{filename}")
 	@Timed
 	public Response retrieveFile(@PathParam("filename") final String filename) {
 		// Only allow downloading files we are currently serving
