@@ -14,12 +14,12 @@ Use `pip install -r requirements.txt` to install requirements.
 
 (Only for the interactive console. For the Python API, refer to source code for details)
 
-    ./interactive.py
+    ./imagej_client.py
     (Client) help
     
     Documented commands (type help <topic>):
     ========================================
-    detail  dt  help  it  iter  list  ls  req  request  ret  retrieve  run  upload
+    detail  download  help  it  iterate  list  run  stop  upload
     
     Undocumented commands:
     ======================
@@ -34,19 +34,21 @@ Use `pip install -r requirements.txt` to install requirements.
                 only list modules that match PATTERN
     
             -c, --count=[COUNT]
-                list first COUNT modules (default: 10)
+                List first COUNT modules (default: 10)
     
             Indices in the list could be used in "detail" and "run" commands.
-    (Client) help iter
+    
+    (Client) help iterate
     Iterates modules in last "list."
     
-            usage:  iter [-r] [NUM]
+            usage:  iterate [-r] [NUM]
     
             [NUM]
                 iterate the next NUM modules (default: 10)
     
             -r, --reverse
                 reverse the iteration order
+    
     (Client) help detail
     Shows details of a module.
     
@@ -54,6 +56,7 @@ Use `pip install -r requirements.txt` to install requirements.
     
             ID
                 index of a module in the last "list", or its full name
+    
     (Client) help run
     Runs a module.
     
@@ -70,6 +73,7 @@ Use `pip install -r requirements.txt` to install requirements.
     
             -n, --no-process
                 do not do pre/post processing
+    
     (Client) help upload
     Uploads a file.
     
@@ -77,34 +81,36 @@ Use `pip install -r requirements.txt` to install requirements.
     
             FILENAME
                 file to be uploaded
-    (Client) help request
-    Requests for downloading an object.
     
-            request -f FORMAT [-c CONFIG] ID
+    (Client) help download
+    Downloads a file.
     
-            ID
-                object ID obtained from "upload" or "run"
+            usage:  download [-f FORMAT] [-c CONFIG] [-d DEST] SOURCE
+    
+            SOURCE
+                object ID obtained from "upload" or "run" if "format" is set, or
+                filename obtained from "download" otherwise
     
             -f, --format=FORMAT
                 file format to be saved with
     
             -c, --config=CONFIG
-                configuration in JSON format for saving the file
-    (Client) help retrieve
-    Downloads a file.
+                configuration in JSON format for saving the file (only used if
+                "format" is set)
     
-            usage:  retrieve [-d DEST] FILENAME
-    
-            FILENAME
-                filename obtained in "request"
-    
-            DEST
+            -d, --dest=DEST
                 destination for saving the file (default: current directory)
+    
+    (Client) help stop
+    Stops imagej-server gracefully.
+    
+            usage: stop
+    
     (Client) quit
 
 ## Example
 
-    ./interactive.py
+    ./imagej_client.py
     (Client) list -r PrimitiveMath
     # Module ID's that contain "PrimitiveMath"
     0: command:net.imagej.ops.math.PrimitiveMath$IntegerAbs
@@ -157,11 +163,9 @@ Use `pip install -r requirements.txt` to install requirements.
     {
         "out": "object:y6ohl5k7lpbi0qvm"
     }
-    (Client) request -f tif object:y6ohl5k7lpbi0qvm
-    # Request the imagej-server to prepare the inverted image for download in tif format
+    (Client) download -f tif -d /tmp object:y6ohl5k7lpbi0qvm
+    # Request the imagej-server to prepare the inverted image for download in tif format, and download it to /tmp
     {
         "filename": "al9n2mwy.tif"
     }
-    (Client) retrieve -d /tmp al9n2mwy.tif
-    # Download the image to /tmp and now you can view it using your image viewer!
     (Client) quit
