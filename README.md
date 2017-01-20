@@ -29,31 +29,60 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
 (try [Postman](https://www.getpostman.com/) if not already):
 
-- `curl localhost:8080/modules`
+- `curl HOST/modules`
 
- Returns a list of modules
+ Returns a list of modules at `HOST`. By default, imagej-server exposes its API at `localhost:8080`, which will be used throughout this documentation.
 
-- `curl localhost:8080/modules/{id}`
+- `curl HOST/modules/'ID'`
+  - example:
 
- Returns detailed information of a module
+    ```
+    $ curl HOST/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'
+    ```
 
-- `curl -XPOST -H "Content-Type: application/json" -d '{"inputs":{INPUTS}}' localhost:8080/modules/{id}`
+ Returns detailed information of a module specified by `ID`. Notice that `ID` should be single quoted to escape special characters such as $.
 
- Executes a module with inputs from json
+- `curl -XPOST -H "Content-Type: application/json" -d '{INPUTS}' HOST/modules/'ID'?[process=PROCESS]`
+  - example:
 
-- `curl -F "file=@PATH/TO/IMAGE" localhost:8080/io/file`
+    ```
+    $ curl -XPOST -H "Content-Type: application/json" -d '{"a":1,"b":3}' \
+    > localhost:8080/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'?process=false
+    {"result":4}
+    ```
 
- Uploads an image to server. id of the uploaded image will be return in form of `{"id":"_img_ID"}` The id will be used in module execution to represent the image.
+ Executes a module with `INPUTS` in JSON format. The optional query parameter `process` determines if the execution should be pre/post processed.
 
-- `curl -XPOST localhost:8080/io/_img_ID?ext=EXTENSION`
+- `curl -F "file=@PATH/TO/FILE" HOST/io/file`
+  - example:
 
- Request download of image specified by ID. The image will be saved into a file in imagej-server side with EXTENSION. The filename is returned.
+    ```
+    $ curl -F "file=@/tmp/about4.tif" localhost:8080/io/file
+    {"id":"object:0123456789abcdef"}
+    ```
 
-- `curl localhost:8080/io/FILENAME`
+ Uploads a file to server and a 16-bit lowercase alphanumeric ID with prefix `object:` will be returned as a JSON string. The ID will be used in module execution to represent the file. Currently only supports uploading images.
 
- Download the image with FILENAME form the server. The FILENAME must be the return value from the request download API call.
+- `curl -XPOST HOST/io/ID?format=FORMAT`
+  - example:
 
-- `curl -XDELETE localhost:8080/admin/stop`
+    ```
+    $ curl -XPOST localhost:8080/io/object:0123456789abcdef?format=png`
+    {"filename":"asdf1234.png"}
+    ```
+
+ Request download of a file specified by ID. The object will be saved into a file on the imagej-server side with FORMAT. The filename is returned.
+
+- `curl -O HOST/io/FILENAME`
+  - example:
+
+    ```
+    $ curl -O localhost:8080/io/asdf1234.png
+    ```
+
+ Download the file with `FILENAME` from the server.
+
+- `curl -XDELETE HOST/admin/stop`
 
  Stop the imagej-server gracefully without shutting down the imagej runtime.
 
@@ -61,7 +90,6 @@ Uses a Python wrapper for the web API. Clients for more languages are coming.
 
 - Ops that need to be initialized are not working when run as module. See the HACK in `ModulesResource`
 - The converters from `Number` to `NumericType` could be refined and considered moving to other projects such as SciJava.
-- The `Mixins` is the initial attempt for providing json annotation to java types that we could not modify. More Mixins should be implemented for serializing complex types (potentially also for deserializing).
 - Do we have better ways to do the I/O? such that no file is needed to store to the disk?
 - It might be a good idea for the client to provide optional language-neutral type information for module execution, so that we can support more complex data structures without too much guessing. This would also solve the problem of nested special object (i.e. `List<Integer>` could not be converted into `List<IntType>` even with converter between `Integer` and `IntType`).
 - What test framework should be used?

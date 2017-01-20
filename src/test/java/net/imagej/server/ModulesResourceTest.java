@@ -46,7 +46,6 @@ import net.imagej.ops.OpService;
 import net.imagej.ops.special.hybrid.AbstractUnaryHybridCI;
 import net.imagej.ops.stats.DefaultSum;
 import net.imagej.server.resources.ModulesResource;
-import net.imagej.server.resources.ModulesResource.RunSpec;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.FloatArray;
@@ -171,10 +170,8 @@ public class ModulesResourceTest extends AbstractResourceTest {
 	// -- helper methods --
 
 	private String runModule(final String id, final Map<String, Object> inputs) {
-		final RunSpec spec = new RunSpec();
-		spec.inputs = inputs;
 		return resources.client().target("/modules/" + id).request().post(Entity
-			.entity(spec, MediaType.APPLICATION_JSON), String.class);
+			.entity(inputs, MediaType.APPLICATION_JSON), String.class);
 	}
 
 	// -- helper classes --

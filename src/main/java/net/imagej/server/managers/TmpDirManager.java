@@ -60,27 +60,6 @@ public class TmpDirManager implements Managed {
 		return Paths.get(tmpDir, filename);
 	}
 
-	// NB: following methods should be in some util class
-
-	private static final String alphanumeric_lower =
-		"0123456789abcdefghijklmnopqrstuvwxyz";
-
-	public static String randomString(final int len) {
-		return randomString(len, alphanumeric_lower);
-	}
-
-	/**
-	 * Generate a random string of length {@code len} from the given
-	 * {@code alphabet}.
-	 */
-	public static String randomString(final int len, final String alphabet) {
-		final StringBuilder sb = new StringBuilder(len);
-		final Random random = ThreadLocalRandom.current();
-		for (int i = 0; i < len; i++)
-			sb.append(alphabet.charAt(random.nextInt(alphabet.length())));
-		return sb.toString();
-	}
-
 	/**
 	 * Removes all directory and files of the given directory recursively
 	 *

@@ -31,10 +31,10 @@ import io.scif.services.DatasetIOService;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.Set;
 
-import javax.activation.MimetypesFileTypeMap;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.Consumes;
@@ -51,6 +51,7 @@ import javax.ws.rs.core.Response.Status;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
+import net.imagej.server.Utils;
 import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
@@ -103,10 +104,10 @@ public class IOResource {
 
 	/**
 	 * Reads the user-uploaded file into the imagej runtime. Currently only
-	 * support images. An UUID representing the data is returned.
+	 * support images. An ID representing the data is returned.
 	 *
 	 * @param fileInputStream file stream of the uploaded file
-	 * @return JSON string with format {"uuid":"_obj_{UUID}"}
+	 * @return JSON string with format {"id":"object:{ID}"}
 	 */
 	@POST
 	@Path("file")
@@ -115,7 +116,7 @@ public class IOResource {
 	public JsonNode uploadFile(
 		@FormDataParam("file") final InputStream fileInputStream)
 	{
-		final String filename = TmpDirManager.randomString(8);
+		final String filename = Utils.randomString(8);
 		final java.nio.file.Path tmpFile = tmpDirManager.getFilePath(filename);
 
 		Dataset ds;
@@ -130,9 +131,9 @@ public class IOResource {
 			tmpFile.toFile().delete();
 		}
 
-		final String uuid = objectService.register(ds);
+		final String id = objectService.register(ds);
 
-		return factory.objectNode().set("uuid", factory.textNode("_obj_" + uuid));
+		return factory.objectNode().set("id", factory.textNode("object:" + id));
 	}
 
 	/**
@@ -140,26 +141,27 @@ public class IOResource {
 	 * disk for serving, and then the file name is returned so that the client can
 	 * download the image in a separate API call.
 	 *
-	 * @param id dataset ID
-	 * @param ext extension of the dataset to be saved with
+	 * @param objectId dataset ID
+	 * @param format format of the dataset to be saved with
 	 * @param config optional config for saving the image
-	 * @return JSON node with format {"filename":"{FILENAME}.{ext}"}
+	 * @return JSON node in the form of {"filename":"{FILENAME}.{format}"}
 	 */
 	@SuppressWarnings("unchecked")
 	@POST
 	@Path("{id}")
 	@Timed
-	public JsonNode requestFile(@PathParam("id") final String id,
-		@QueryParam("ext") @NotEmpty final String ext, final SCIFIOConfig config)
+	public JsonNode requestFile(@PathParam("id") final String objectId,
+		@QueryParam("format") @NotEmpty final String format,
+		final SCIFIOConfig config)
 	{
-		if (!id.startsWith("_obj_")) {
-			throw new WebApplicationException("ID must start with \"_obj_\"",
+		if (!objectId.startsWith("object:")) {
+			throw new WebApplicationException("ID must start with \"object:\"",
 				Status.BAD_REQUEST);
 		}
 
-		final String uuid = id.substring(5);
+		final String id = objectId.substring("object:".length());
 
-		final Object obj = objectService.find(uuid);
+		final Object obj = objectService.find(id);
 		if (obj == null) {
 			throw new WebApplicationException("Image does not exist");
 		}
@@ -177,8 +179,8 @@ public class IOResource {
 			ds = datasetService.create(img);
 		}
 
-		final String filename = String.format("%s.%s", TmpDirManager.randomString(
-			8), ext);
+		final String filename = String.format("%s.%s", Utils.timestampedId(8),
+			format);
 		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
 
 		try {
@@ -201,7 +203,6 @@ public class IOResource {
 	 */
 	@GET
 	@Path("{filename}")
-	@Produces("image/*")
 	@Timed
 	public Response retrieveFile(@PathParam("filename") final String filename) {
 		// Only allow downloading files we are currently serving
@@ -210,7 +211,8 @@ public class IOResource {
 		}
 
 		final File file = tmpDirManager.getFilePath(filename).toFile();
-		final String mt = new MimetypesFileTypeMap().getContentType(file);
-		return Response.ok(file, mt).build();
+		final String mt = URLConnection.guessContentTypeFromName(filename);
+		return Response.ok(file, mt).header("Content-Length", file.length())
+			.build();
 	}
 }

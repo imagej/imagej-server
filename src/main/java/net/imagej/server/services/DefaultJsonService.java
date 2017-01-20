@@ -61,7 +61,7 @@ public class DefaultJsonService implements JsonService {
 	private static final Class<?>[] NOT_SERIALIZED = { EuclideanSpace.class };
 
 	/**
-	 * Customized ObjectMapper for serializing unsupported Objects into UUID using
+	 * Customized ObjectMapper for serializing unsupported Objects into ID using
 	 * ObjectService.
 	 */
 	private final ObjectMapper objToIdMapper;
@@ -87,13 +87,13 @@ public class DefaultJsonService implements JsonService {
 				throws IOException, JsonProcessingException
 			{
 				final Object obj = super.deserialize(p, ctxt);
-				if (!(obj instanceof String && ((String) obj).startsWith("_obj_")))
+				if (!(obj instanceof String && ((String) obj).startsWith("object:")))
 					return obj;
-				final String uuid = ((String) obj).substring(5);
-				if (!objectService.contains(uuid)) {
+				final String id = ((String) obj).substring("object:".length());
+				if (!objectService.contains(id)) {
 					throw new JsonMappingException(p, "Object does not exist");
 				}
-				return objectService.find(uuid);
+				return objectService.find(id);
 			}
 		};
 
@@ -106,7 +106,7 @@ public class DefaultJsonService implements JsonService {
 					SerializerProvider serializers) throws IOException,
 					JsonProcessingException
 			{
-					gen.writeString("_obj_" + objectService.register(value));
+					gen.writeString("object:" + objectService.register(value));
 				}
 
 			};
@@ -122,7 +122,7 @@ public class DefaultJsonService implements JsonService {
 				// If the serialized class is unknown (i.e. serialized using the general
 				// BeanSerializer) or should not be serialized (i.e. complicated class
 				// implemented interfaces such as Iterable), would be serialized as an
-				// UUID.
+				// ID.
 				if (serializer instanceof BeanSerializer) return objToIdSerializer;
 				if (notSerialized(beanDesc.getBeanClass())) return objToIdSerializer;
 				return serializer;

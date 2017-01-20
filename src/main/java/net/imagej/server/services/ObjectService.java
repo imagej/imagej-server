@@ -21,32 +21,41 @@
 
 package net.imagej.server.services;
 
+import java.util.Set;
+
 /**
  * @author Leon Yang
  */
 public interface ObjectService {
 
 	/**
+	 * Gets a set of all IDs.
+	 * 
+	 * @return a set of all IDs
+	 */
+	Set<String> getIds();
+
+	/**
 	 * Registers an Object if it does not exist yet.
 	 * 
 	 * @param obj the Object to be registered.
-	 * @return the UUID of the registered Object.
+	 * @return the ID of the registered Object.
 	 */
 	String register(final Object obj);
 
 	/**
-	 * Retrieves the Object with the given UUID.
+	 * Retrieves the Object with the given ID.
 	 * 
-	 * @param uuid
-	 * @return Object with the given UUID
+	 * @param id
+	 * @return Object with the given ID
 	 */
-	Object find(final String uuid);
+	Object find(final String id);
 
 	/**
-	 * Checks if exists an Object with the given UUID.
+	 * Checks if exists an Object with the given ID.
 	 * 
-	 * @param uuid
+	 * @param id
 	 * @return true if such Object exists.
 	 */
-	boolean contains(final String uuid);
+	boolean contains(final String id);
 }
