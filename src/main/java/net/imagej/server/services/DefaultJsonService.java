@@ -89,7 +89,7 @@ public class DefaultJsonService implements JsonService {
 				final Object obj = super.deserialize(p, ctxt);
 				if (!(obj instanceof String && ((String) obj).startsWith("object:")))
 					return obj;
-				final String id = ((String) obj).substring("object:".length());
+				final String id = (String) obj;
 				if (!objectService.contains(id)) {
 					throw new JsonMappingException(p, "Object does not exist");
 				}
@@ -106,7 +106,7 @@ public class DefaultJsonService implements JsonService {
 					SerializerProvider serializers) throws IOException,
 					JsonProcessingException
 			{
-					gen.writeString("object:" + objectService.register(value));
+					gen.writeString(objectService.register(value));
 				}
 
 			};

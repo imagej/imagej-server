@@ -138,7 +138,7 @@ public class IOResource {
 
 		final String id = objectService.register(ds);
 
-		return factory.objectNode().set("id", factory.textNode("object:" + id));
+		return factory.objectNode().set("id", factory.textNode(id));
 	}
 
 	/**
@@ -157,14 +157,7 @@ public class IOResource {
 		@QueryParam("format") @NotEmpty final String format,
 		final SCIFIOConfig config)
 	{
-		if (!objectId.startsWith("object:")) {
-			throw new WebApplicationException("ID must start with \"object:\"",
-				Status.BAD_REQUEST);
-		}
-
-		final String id = objectId.substring("object:".length());
-
-		final Object obj = objectService.find(id);
+		final Object obj = objectService.find(objectId);
 		if (obj == null) {
 			throw new WebApplicationException("File does not exist");
 		}

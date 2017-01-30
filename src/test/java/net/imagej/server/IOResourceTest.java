@@ -67,12 +67,11 @@ public class IOResourceTest extends AbstractResourceTest {
 	public void ioResource() {
 		try {
 			// Test uploadFile
-			final String imgID = uploadFile("imgs/about4.tif").substring("object:"
-				.length());
+			final String imgID = uploadFile("imgs/about4.tif");
 			assertTrue(objectService.contains(imgID));
 
 			// Test retrieveFile
-			final File downloaded = retrieveFile("object:" + imgID, "tiff");
+			final File downloaded = retrieveFile(imgID, "tiff");
 			final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
 				.getAbsolutePath());
 			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID))
