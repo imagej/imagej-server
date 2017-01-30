@@ -36,7 +36,6 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -82,11 +81,6 @@ public class IOResource {
 	@Inject
 	private ObjectService objectService;
 
-	/** Thread-safe set of name of files that are currently served. */
-	@Inject
-	@Named("SERVING")
-	private Set<String> serving;
-
 	@Inject
 	private TmpDirManager tmpDirManager;
 
@@ -111,17 +105,6 @@ public class IOResource {
 	@Path("objects")
 	public Set<String> getIds() {
 		return objectService.getIds();
-	}
-
-	/**
-	 * List all files being served on the imagej-server.
-	 * 
-	 * @return a list of filenames
-	 */
-	@GET
-	@Path("files")
-	public Set<String> getServing() {
-		return serving;
 	}
 
 	/**
@@ -211,7 +194,6 @@ public class IOResource {
 			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
 
-		serving.add(filename);
 		final File file = filePath.toFile();
 		final String mt = URLConnection.guessContentTypeFromName(filename);
 		return Response.ok(file, mt).header("Content-Length", file.length())
