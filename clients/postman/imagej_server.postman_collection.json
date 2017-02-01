@@ -1,0 +1,340 @@
+{
+	"variables": [],
+	"info": {
+		"name": "imagej_server",
+		"_postman_id": "c6afe526-a414-8d08-a469-4b6c06efd10b",
+		"description": "Requests that test the io, modules, and admin APIs of imagej-server.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get_modules",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Returns an array\"] = jsonData instanceof Array;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/modules",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "Gets a list of modules available on imagej-server"
+			},
+			"response": []
+		},
+		{
+			"name": "upload_img",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Body contains id\"] = responseBody.has(\"id\");",
+							"var jsonData = JSON.parse(responseBody);",
+							"postman.setGlobalVariable(\"img-in\", jsonData.id);",
+							"postman.setGlobalVariable(\"img-out\", jsonData.id);"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/file",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"enabled": true,
+							"warning": "",
+							"src": "about4.tif"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get_objects",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Returns an array\"] = jsonData instanceof Array;",
+							"tests[\"Contains ID of img-out\"] = jsonData.indexOf(postman.getGlobalVariable(\"img-out\")) !== -1;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/objects",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "Gets a list of object IDs available on imagej-server"
+			},
+			"response": []
+		},
+		{
+			"name": "retrieve_img",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/file/{{img-out}}?format=png",
+				"method": "POST",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "create_img_from_img",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Result contains out\"] = responseBody.has(\"out\");",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Out is different from img-in\"] = jsonData.out !== postman.getGlobalVariable(\"img-in\");",
+							"postman.setGlobalVariable(\"img-out\", jsonData.out);"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/modules/command:net.imagej.ops.create.img.CreateImgFromImg",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"in\": \"{{img-in}}\"\n}"
+				},
+				"description": "Send POST request to /modules/ID to execute the createImgFromImg module"
+			},
+			"response": []
+		},
+		{
+			"name": "get_objects copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Returns an array\"] = jsonData instanceof Array;",
+							"tests[\"Contains ID of img-out\"] = jsonData.indexOf(postman.getGlobalVariable(\"img-out\")) !== -1;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/objects",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "Gets a list of object IDs available on imagej-server"
+			},
+			"response": []
+		},
+		{
+			"name": "invert image",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Result contains out\"] = responseBody.has(\"out\");",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Out is the same as img-out\"] = jsonData.out == postman.getGlobalVariable(\"img-out\");"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/modules/command:net.imagej.ops.image.invert.InvertII",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"in\": \"{{img-in}}\",\n\t\"out\": \"{{img-out}}\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "retrieve_img copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/file/{{img-out}}?format=png",
+				"method": "POST",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "script_eval",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Result contains out\"] = responseBody.has(\"out\");",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Out has thresholdedPlus\"] = jsonData.out.thresholdedPlus !== undefined;",
+							"tests[\"Script generates an object\"] = postman.getGlobalVariable(\"img-out\") !== jsonData.out.thresholdedPlus;",
+							"postman.setGlobalVariable(\"img-out\", jsonData.out.thresholdedPlus);"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/modules/command:net.imagej.server.external.ScriptEval",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"language\": \"python\",\n\t\"in1\":\"# @OpService ops\\n# @Dataset data\\n# @OUTPUT ImgPlus thresholdedPlus\\nfrom net.imagej import ImgPlus\\nfrom net.imagej.axis import Axes\\nfrom net.imagej.ops import Ops\\nfrom net.imglib2.type.logic import BitType\\nfrom net.imglib2.type.numeric.integer import UnsignedByteType\\nxDim = data.dimensionIndex(Axes.X)\\nyDim = data.dimensionIndex(Axes.Y)\\notsu = ops.op(Ops.Threshold.Otsu, data.getImgPlus())\\nthresholded = ops.create().img(data.getImgPlus(), BitType())\\nops.slice(thresholded, data.getImgPlus(), otsu, [xDim,yDim])\\nimgout = ops.create().img(thresholded, UnsignedByteType())\\nbit2byte = ops.op(Ops.Convert.Scale, UnsignedByteType(), BitType())\\nops.run(Ops.Convert.ImageType, imgout, thresholded, bit2byte)\\nthresholdedPlus=ImgPlus(imgout, data.getImgPlus(), True)\\nthresholdedPlus.setName(\\\"Thresholded\\\")\",\n\t\"in2\": {\n\t\t\"data\":\"{{img-out}}\"\n\t}\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get_objects copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Returns an array\"] = jsonData instanceof Array;",
+							"tests[\"Contains ID of img-out\"] = jsonData.indexOf(postman.getGlobalVariable(\"img-out\")) !== -1;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/objects",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": "Gets a list of object IDs available on imagej-server"
+			},
+			"response": []
+		},
+		{
+			"name": "retrieve_img copy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/io/file/{{img-out}}?format=png",
+				"method": "POST",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "stop",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = responseCode.code === 200;"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/admin/stop",
+				"method": "DELETE",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
