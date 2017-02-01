@@ -189,17 +189,17 @@ public class DefaultJsonServiceTest {
 		@Override
 		public String register(Object obj) {
 			list.add(obj);
-			return String.valueOf(list.size() - 1);
+			return "object:" + String.valueOf(list.size() - 1);
 		}
 
 		@Override
 		public Object find(String id) {
-			return list.get(Integer.valueOf(id));
+			return list.get(Integer.valueOf(id.substring("object:".length())));
 		}
 
 		@Override
 		public boolean contains(String id) {
-			return Integer.valueOf(id) < list.size();
+			return Integer.valueOf(id.substring("object:".length())) < list.size();
 		}
 
 	}

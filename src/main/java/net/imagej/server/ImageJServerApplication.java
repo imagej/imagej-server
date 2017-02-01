@@ -25,10 +25,6 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.resources.AdminResource;
@@ -39,7 +35,6 @@ import net.imagej.server.services.DefaultObjectService;
 import net.imagej.server.services.JsonService;
 import net.imagej.server.services.ObjectService;
 
-import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.scijava.Context;
@@ -114,10 +109,6 @@ public class ImageJServerApplication extends
 				bind(objectService).to(ObjectService.class);
 				bind(jsonService).to(JsonService.class);
 				bind(tmpFileManager).to(TmpDirManager.class);
-				bind(Collections.newSetFromMap(
-					new ConcurrentHashMap<String, Boolean>())).to(
-						new TypeLiteral<Set<String>>()
-				{}).named("SERVING");
 			}
 
 		});

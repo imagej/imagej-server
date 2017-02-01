@@ -58,7 +58,7 @@ public class DefaultObjectService implements ObjectService {
 
 	@Override
 	public String register(final Object obj) {
-		final String id = Utils.timestampedId(8);
+		final String id = "object:" + Utils.timestampedId(8);
 		final String prev = obj2id.putIfAbsent(obj, id);
 
 		if (prev != null) return prev;

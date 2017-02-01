@@ -67,16 +67,11 @@ public class IOResourceTest extends AbstractResourceTest {
 	public void ioResource() {
 		try {
 			// Test uploadFile
-			final String imgID = uploadFile("imgs/about4.tif").substring("object:"
-				.length());
+			final String imgID = uploadFile("imgs/about4.tif");
 			assertTrue(objectService.contains(imgID));
 
-			// Test requestFile
-			final String filename = requestFile("object:" + imgID, "tiff");
-			assertTrue(serving.contains(filename));
-
 			// Test retrieveFile
-			final File downloaded = retrieveFile(filename);
+			final File downloaded = retrieveFile(imgID, "tiff");
 			final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
 				.getAbsolutePath());
 			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID))
@@ -116,29 +111,14 @@ public class IOResourceTest extends AbstractResourceTest {
 	}
 
 	/**
-	 * Request download of a file in a specific format
+	 * Retrieve an object as a file
 	 * 
-	 * @param objectId ID of the file
+	 * @param objectId object ID
 	 * @param format format of the file to be saved
-	 * @return filename token for downloading the requested file
+	 * @return object as a file
 	 */
-	public String requestFile(final String objectId, final String format) {
-		final String response = resources.client().target("/io/file/" + objectId).queryParam(
-			"format", format).request().post(null, String.class);
-		final Matcher matcher = Pattern.compile("\\{\"filename\":\"([^\"]+)\"\\}")
-			.matcher(response);
-		assertTrue(matcher.find());
-		return matcher.group(1);
-	}
-
-	/**
-	 * Retrieve a file
-	 * 
-	 * @param filename
-	 * @return the downloaded file
-	 */
-	public File retrieveFile(final String filename) {
-		return resources.client().target("/io/file/" + filename).request().get(
-			File.class);
+	public File retrieveFile(final String objectId, final String format) {
+		return resources.client().target("/io/file/" + objectId).queryParam(
+			"format", format).request().post(null, File.class);
 	}
 }

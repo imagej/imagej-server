@@ -21,78 +21,64 @@ On some systems, you may need to change the value of `tmpDir` in `imagej-server.
 
 ## Usage
 
-### [Interactive Client in Python](clients/python)
+### [Python Client](clients/python)
 
-Uses a Python wrapper for the web API. Clients for more languages are coming. 
+Uses a Python wrapper for the web API. Clients for more languages are coming.
+
+### [Postman Collection](clients/postman)
+
+A collection of sample API calls to imagej-server using [Postman](https://www.getpostman.com/).
 
 ### APIs
 
-(try [Postman](https://www.getpostman.com/) if not already):
+- __GET__ /modules
 
-- `curl HOST/modules`
+ Returns a list of modules. By default, imagej-server exposes its API at `localhost:8080`, which will be used throughout this documentation.
+ 
+ `$ curl localhost:8080/modules`
 
- Returns a list of modules at `HOST`. By default, imagej-server exposes its API at `localhost:8080`, which will be used throughout this documentation.
+- __GET__ /modules/*{id}*
 
-- `curl HOST/modules/'ID'`
-  - example:
+ Returns detailed information of a module specified by `{id}`. Notice that `{id}` could contain special characters such as dollar sign (`$`), which needs to be escaped when using `cURL`.
+ 
+ `$ curl localhost:8080/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'`
 
-    ```
-    $ curl HOST/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'
-    ```
+- __POST__ /modules/*{id}*?process=*{process}*
 
- Returns detailed information of a module specified by `ID`. Notice that `ID` should be single quoted to escape special characters such as $.
+ Executes a module with with JSON inputs. Use the module details to determine the correct input keys. The optional query parameter `process` determines if the execution should be pre/post processed.
 
-- `curl -XPOST -H "Content-Type: application/json" -d '{INPUTS}' HOST/modules/'ID'?[process=PROCESS]`
-  - example:
+ ```
+ $ curl -XPOST -H "Content-Type: application/json" -d '{"a":1,"b":3}' \
+ > localhost:8080/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'?process=false
+ {"result":4}
+ ```
 
-    ```
-    $ curl -XPOST -H "Content-Type: application/json" -d '{"a":1,"b":3}' \
-    > localhost:8080/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'?process=false
-    {"result":4}
-    ```
-
- Executes a module with `INPUTS` in JSON format. The optional query parameter `process` determines if the execution should be pre/post processed.
-
-- `curl HOST/io/objects`
+- __GET__ /io/objects
 
  Lists all object IDs available on imagej-server.
+ 
+ `$ curl localhost:8080/io/objects`
 
-- `curl HOST/io/files`
+- __POST__ /io/file
 
- Lists all files being served by imagej-server.
+ Uploads a file to server. A 16-bit lowercase alphanumeric ID prefixed with `object:` will be returned as a JSON string. The ID can be used in module execution to represent the file. Currently only supports uploading images.
 
-- `curl -F "file=@PATH/TO/FILE" HOST/io/file`
-  - example:
+ ```
+ $ curl -F "file=@src/test/resources/imgs/about4.tif" localhost:8080/io/file
+ {"id":"object:0123456789abcdef"}
+ ```
 
-    ```
-    $ curl -F "file=@/tmp/about4.tif" localhost:8080/io/file
-    {"id":"object:0123456789abcdef"}
-    ```
+- __POST__ /io/file/*{id}*?format=*{format}*
 
- Uploads a file to server and a 16-bit lowercase alphanumeric ID with prefix `object:` will be returned as a JSON string. The ID will be used in module execution to represent the file. Currently only supports uploading images.
+ Download an object in some specific format from the server. The query parameter `format` is required.
 
-- `curl -XPOST HOST/io/file/ID?format=FORMAT`
-  - example:
+ `$ curl -XPOST localhost:8080/io/object:0123456789abcdef?format=png`
 
-    ```
-    $ curl -XPOST localhost:8080/io/object:0123456789abcdef?format=png`
-    {"filename":"asdf1234.png"}
-    ```
-
- Request download of a file specified by ID. The object will be saved into a file on the imagej-server side with FORMAT. The filename is returned.
-
-- `curl -O HOST/io/file/FILENAME`
-  - example:
-
-    ```
-    $ curl -O localhost:8080/io/asdf1234.png
-    ```
-
- Download the file with `FILENAME` from the server.
-
-- `curl -XDELETE HOST/admin/stop`
+- __DELETE__ /admin/stop
 
  Stop the imagej-server gracefully without shutting down the imagej runtime.
+
+ `curl -XDELETE localhost:8080/admin/stop`
 
 ## Notes and memo
 

@@ -36,7 +36,6 @@ import java.nio.file.Files;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -82,11 +81,6 @@ public class IOResource {
 	@Inject
 	private ObjectService objectService;
 
-	/** Thread-safe set of name of files that are currently served. */
-	@Inject
-	@Named("SERVING")
-	private Set<String> serving;
-
 	@Inject
 	private TmpDirManager tmpDirManager;
 
@@ -111,17 +105,6 @@ public class IOResource {
 	@Path("objects")
 	public Set<String> getIds() {
 		return objectService.getIds();
-	}
-
-	/**
-	 * List all files being served on the imagej-server.
-	 * 
-	 * @return a list of filenames
-	 */
-	@GET
-	@Path("files")
-	public Set<String> getServing() {
-		return serving;
 	}
 
 	/**
@@ -155,37 +138,28 @@ public class IOResource {
 
 		final String id = objectService.register(ds);
 
-		return factory.objectNode().set("id", factory.textNode("object:" + id));
+		return factory.objectNode().set("id", factory.textNode(id));
 	}
 
 	/**
-	 * Handles requests for downloading an image. A dataset is first stored on
-	 * disk for serving, and then the file name is returned so that the client can
-	 * download the image in a separate API call.
+	 * Retrieves an object in a specific format.
 	 *
-	 * @param objectId dataset ID
-	 * @param format format of the dataset to be saved with
-	 * @param config optional config for saving the image
-	 * @return JSON node in the form of {"filename":"{FILENAME}.{format}"}
+	 * @param objectId object ID
+	 * @param format format of the object to be saved into
+	 * @param config optional config for saving the object (not tested)
+	 * @return Response with the object as content
 	 */
 	@SuppressWarnings("unchecked")
 	@POST
 	@Path("file/{id}")
 	@Timed
-	public JsonNode requestFile(@PathParam("id") final String objectId,
+	public Response retrieveFile(@PathParam("id") final String objectId,
 		@QueryParam("format") @NotEmpty final String format,
 		final SCIFIOConfig config)
 	{
-		if (!objectId.startsWith("object:")) {
-			throw new WebApplicationException("ID must start with \"object:\"",
-				Status.BAD_REQUEST);
-		}
-
-		final String id = objectId.substring("object:".length());
-
-		final Object obj = objectService.find(id);
+		final Object obj = objectService.find(objectId);
 		if (obj == null) {
-			throw new WebApplicationException("Image does not exist");
+			throw new WebApplicationException("File does not exist");
 		}
 		if (!(obj instanceof Img)) {
 			throw new WebApplicationException("Object is not an image");
@@ -213,26 +187,7 @@ public class IOResource {
 			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
 
-		serving.add(filename);
-		return factory.objectNode().set("filename", factory.textNode(filename));
-	}
-
-	/**
-	 * Verify the file user requested to download is valid and start the download.
-	 *
-	 * @param filename name of the file to be downloaded
-	 * @return Response with the file as entity
-	 */
-	@GET
-	@Path("file/{filename}")
-	@Timed
-	public Response retrieveFile(@PathParam("filename") final String filename) {
-		// Only allow downloading files we are currently serving
-		if (!serving.contains(filename)) {
-			throw new WebApplicationException(Status.NOT_FOUND);
-		}
-
-		final File file = tmpDirManager.getFilePath(filename).toFile();
+		final File file = filePath.toFile();
 		final String mt = URLConnection.guessContentTypeFromName(filename);
 		return Response.ok(file, mt).header("Content-Length", file.length())
 			.build();
