@@ -71,9 +71,7 @@ public class ScriptEval extends
 			return scriptService.run(fakePath, input1, process, input2).get()
 				.getOutputs();
 		}
-		catch (InterruptedException | ExecutionException | IOException
-				| ScriptException exc)
-		{
+		catch (InterruptedException | ExecutionException exc) {
 			throw new IllegalArgumentException(exc);
 		}
 	}
