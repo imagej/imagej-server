@@ -21,11 +21,8 @@
 
 package net.imagej.server.external;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
-import javax.script.ScriptException;
 
 import net.imagej.ops.Ops;
 import net.imagej.ops.special.function.AbstractBinaryFunctionOp;

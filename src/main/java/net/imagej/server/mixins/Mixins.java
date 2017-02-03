@@ -100,6 +100,7 @@ public class Mixins {
 		isGetterVisibility = Visibility.NONE)
 	protected static abstract class ModuleInfoMixIn implements ModuleInfo {
 
+		@Override
 		@JsonProperty
 		public abstract String getIdentifier();
 

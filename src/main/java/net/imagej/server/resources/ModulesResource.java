@@ -88,9 +88,7 @@ public class ModulesResource {
 	private void updateModuleCache() {
 		LinkedHashMap<String, ModuleInfo> tmp = new LinkedHashMap<>();
 		for (final ModuleInfo module : moduleService.getModules()) {
-			if (module instanceof Identifiable) {
-				tmp.put(((Identifiable) module).getIdentifier(), module);
-			}
+			tmp.put(((Identifiable) module).getIdentifier(), module);
 		}
 		// atomic update
 		moduleCache = tmp;

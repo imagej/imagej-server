@@ -82,7 +82,6 @@ public class ModulesResourceTest extends AbstractResourceTest {
 			.getModules();
 
 		for (final ModuleInfo mInfo : mInfos) {
-			if (!(mInfo instanceof Identifiable)) continue;
 			final String id = ((Identifiable) mInfo).getIdentifier();
 			assertTrue(ids.contains(id));
 			ids.remove(id);
