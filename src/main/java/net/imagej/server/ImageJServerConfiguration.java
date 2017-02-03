@@ -21,11 +21,7 @@
 
 package net.imagej.server;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.dropwizard.Configuration;
-
-import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Configuration instance for imagej-server by parsing imagej-server.yml
@@ -34,17 +30,5 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 public class ImageJServerConfiguration extends Configuration {
 
-	/** temporary directory storing images for IO */
-	@NotEmpty
-	private String tmpDir;
-
-	@JsonProperty
-	public String getTmpDir() {
-		return tmpDir;
-	}
-
-	@JsonProperty
-	public void setTmpDir(final String tmpDir) {
-		this.tmpDir = tmpDir;
-	}
+	// NB: No implementation is needed yet
 }

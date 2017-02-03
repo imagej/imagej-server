@@ -26,13 +26,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import io.scif.config.SCIFIOConfig;
+import io.scif.io.ByteArrayHandle;
 import io.scif.services.DatasetIOService;
+import io.scif.services.LocationService;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLConnection;
-import java.nio.file.Files;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -47,11 +48,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.server.Utils;
-import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
 
@@ -78,11 +79,11 @@ public class IOResource {
 	@Parameter
 	private DatasetIOService datasetIOService;
 
-	@Inject
-	private ObjectService objectService;
+	@Parameter
+	private LocationService locationService;
 
 	@Inject
-	private TmpDirManager tmpDirManager;
+	private ObjectService objectService;
 
 	private static final JsonNodeFactory factory = JsonNodeFactory.instance;
 
@@ -121,24 +122,42 @@ public class IOResource {
 	public JsonNode uploadFile(
 		@FormDataParam("file") final InputStream fileInputStream)
 	{
+		// Maps a filename to a byte array in memory
 		final String filename = Utils.randomString(8);
-		final java.nio.file.Path tmpFile = tmpDirManager.getFilePath(filename);
-
-		Dataset ds;
+		final ByteArrayHandle bah = new ByteArrayHandle();
 		try {
-			Files.copy(fileInputStream, tmpFile);
-			ds = datasetIOService.open(tmpFile.toString());
-		}
-		catch (final IOException exc) {
-			throw new WebApplicationException(exc, Status.CONFLICT);
+			locationService.mapFile(filename, bah);
+
+			// Reads input file into memory
+			final int BUFFER_SIZE = 8192;
+			final byte[] buffer = new byte[BUFFER_SIZE];
+			int n = 0;
+			try {
+				while ((n = fileInputStream.read(buffer)) != -1) {
+					bah.write(buffer, 0, n);
+				}
+			}
+			catch (IOException exc) {
+				throw new WebApplicationException(exc, Status.BAD_REQUEST);
+			}
+
+			// Loads file as dataset
+			Dataset ds;
+			try {
+				ds = datasetIOService.open(filename);
+			}
+			catch (final IOException exc) {
+				throw new WebApplicationException(exc, Status.CONFLICT);
+			}
+
+			final String id = objectService.register(ds);
+
+			return factory.objectNode().set("id", factory.textNode(id));
 		}
 		finally {
-			tmpFile.toFile().delete();
+			// Removes mapping for GC to free memory
+			locationService.getIdMap().remove(filename, bah);
 		}
-
-		final String id = objectService.register(ds);
-
-		return factory.objectNode().set("id", factory.textNode(id));
 	}
 
 	/**
@@ -175,21 +194,36 @@ public class IOResource {
 			ds = datasetService.create(img);
 		}
 
+		// Maps a filename to a byte array in memory
 		final String filename = String.format("%s.%s", Utils.timestampedId(8),
 			format);
-		final java.nio.file.Path filePath = tmpDirManager.getFilePath(filename);
-
+		final ByteArrayHandle bah = new ByteArrayHandle();
 		try {
-			datasetIOService.save(ds, filePath.toString(), config);
-		}
-		catch (final IOException exc) {
-			filePath.toFile().delete();
-			throw new WebApplicationException(exc, Status.CONFLICT);
-		}
+			locationService.mapFile(filename, bah);
 
-		final File file = filePath.toFile();
-		final String mt = URLConnection.guessContentTypeFromName(filename);
-		return Response.ok(file, mt).header("Content-Length", file.length())
-			.build();
+			try {
+				datasetIOService.save(ds, filename, config);
+			}
+			catch (final IOException exc) {
+				locationService.getIdMap().remove(filename, bah);
+				throw new WebApplicationException(exc, Status.CONFLICT);
+			}
+
+			final String mt = URLConnection.guessContentTypeFromName(filename);
+			final StreamingOutput so = new StreamingOutput() {
+
+				@Override
+				public void write(OutputStream output) throws IOException,
+					WebApplicationException
+				{
+					output.write(bah.getBytes(), 0, (int) bah.length());
+				}
+			};
+			return Response.ok(so, mt).header("Content-Length", bah.length()).build();
+		}
+		finally {
+			// Removes mapping for GC to free memory
+			locationService.getIdMap().remove(filename, bah);
+		}
 	}
 }

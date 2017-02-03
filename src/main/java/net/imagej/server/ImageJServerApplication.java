@@ -26,7 +26,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 import net.imagej.server.health.ImageJServerHealthCheck;
-import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.resources.AdminResource;
 import net.imagej.server.resources.IOResource;
 import net.imagej.server.resources.ModulesResource;
@@ -84,12 +83,6 @@ public class ImageJServerApplication extends
 
 		environment.jersey().register(MultiPartFeature.class);
 
-		// -- lifecycle managers --
-
-		final TmpDirManager tmpFileManager = new TmpDirManager(configuration
-			.getTmpDir());
-		environment.lifecycle().manage(tmpFileManager);
-
 		// -- resources --
 		
 		environment.jersey().register(AdminResource.class);
@@ -108,7 +101,6 @@ public class ImageJServerApplication extends
 				bind(env).to(Environment.class);
 				bind(objectService).to(ObjectService.class);
 				bind(jsonService).to(JsonService.class);
-				bind(tmpFileManager).to(TmpDirManager.class);
 			}
 
 		});

@@ -17,8 +17,6 @@ mvn exec:java -Dexec.mainClass="net.imagej.server.Main"
 
 Or from an IDE, execute the class `net.imagej.server.Main`.
 
-On some systems, you may need to change the value of `tmpDir` in `imagej-server.yml`.
-
 ## Usage
 
 ### [Python Client](clients/python)
@@ -85,7 +83,6 @@ A collection of sample API calls to imagej-server using [Postman](https://www.ge
 - DefaultObjectService effectively prevents garbage collection of all objects produced during the lifetime of this imagej-server instance, which could lead to serious memory issues. The timestamped object ID could be used to determine if an object should "expire" on a regular basis or when memory runs low. 
 - Ops that need to be initialized are not working when run as module. See the HACK in `ModulesResource`
 - The converters from `Number` to `NumericType` could be refined and considered moving to other projects such as SciJava.
-- Do we have better ways to do the I/O? such that no file is needed to store to the disk?
 - It might be a good idea for the client to provide optional language-neutral type information for module execution, so that we can support more complex data structures without too much guessing. This would also solve the problem of nested special object (i.e. `List<Integer>` could not be converted into `List<IntType>` even with converter between `Integer` and `IntType`).
 - What test framework should be used?
 - Might need to add logging/debug info

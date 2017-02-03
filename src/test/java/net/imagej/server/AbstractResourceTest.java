@@ -26,17 +26,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import io.dropwizard.testing.junit.ResourceTestRule.Builder;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import net.imagej.server.managers.TmpDirManager;
 import net.imagej.server.services.DefaultJsonService;
 import net.imagej.server.services.DefaultObjectService;
 import net.imagej.server.services.JsonService;
 import net.imagej.server.services.ObjectService;
 
-import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.scijava.Context;
 
@@ -55,12 +49,6 @@ public abstract class AbstractResourceTest {
 	protected static final JsonService jsonService = new DefaultJsonService(
 		objectService);
 
-	protected static final TmpDirManager tmpDirManager = new TmpDirManager(
-		"/tmp");
-
-	protected static final Set<String> serving = Collections.newSetFromMap(
-		new ConcurrentHashMap<>());
-
 	protected static final ObjectMapper objectMapper = new ObjectMapper();
 
 	static {
@@ -74,8 +62,6 @@ public abstract class AbstractResourceTest {
 			bind(ctx).to(Context.class);
 			bind(objectService).to(ObjectService.class);
 			bind(jsonService).to(JsonService.class);
-			bind(tmpDirManager).to(TmpDirManager.class);
-			bind(serving).to(new TypeLiteral<Set<String>>() {}).named("SERVING");
 		}
 	};
 
