@@ -178,10 +178,12 @@ public class IOResource {
 	{
 		final Object obj = objectService.find(objectId);
 		if (obj == null) {
-			throw new WebApplicationException("File does not exist");
+			throw new WebApplicationException("File does not exist",
+				Status.NOT_FOUND);
 		}
 		if (!(obj instanceof Img)) {
-			throw new WebApplicationException("Object is not an image");
+			throw new WebApplicationException("Object is not an image",
+				Status.BAD_REQUEST);
 		}
 
 		final Dataset ds;
