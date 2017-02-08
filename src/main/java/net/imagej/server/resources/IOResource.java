@@ -38,6 +38,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -106,6 +107,24 @@ public class IOResource {
 	@Path("objects")
 	public Set<String> getIds() {
 		return objectService.getIds();
+	}
+
+	/**
+	 * Removes one object from ObjectService.
+	 * 
+	 * @param id object ID to remove
+	 * @return response
+	 */
+	@DELETE
+	@Path("objects/{id}")
+	public Response removeObject(@PathParam("id") final String id) {
+		if (!objectService.contains(id)) {
+			throw new WebApplicationException("ID does not exist", Status.NOT_FOUND);
+		}
+		if (!objectService.remove(id)) {
+			throw new WebApplicationException("Fail to remove ID");
+		}
+		return Response.ok().build();
 	}
 
 	/**
