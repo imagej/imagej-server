@@ -44,6 +44,14 @@ public interface ObjectService {
 	String register(final Object obj);
 
 	/**
+	 * Removes an Object with the given ID.
+	 * 
+	 * @param id
+	 * @return true if the process was successful
+	 */
+	boolean remove(final String id);
+
+	/**
 	 * Retrieves the Object with the given ID.
 	 * 
 	 * @param id

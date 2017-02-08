@@ -193,6 +193,11 @@ public class DefaultJsonServiceTest {
 		}
 
 		@Override
+		public boolean remove(final String id) {
+			return false;
+		}
+
+		@Override
 		public Object find(String id) {
 			return list.get(Integer.valueOf(id.substring("object:".length())));
 		}

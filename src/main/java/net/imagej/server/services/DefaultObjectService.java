@@ -66,6 +66,13 @@ public class DefaultObjectService implements ObjectService {
 		id2obj.put(id, obj);
 		return id;
 	}
+	
+	@Override
+	public boolean remove(final String id) {
+		if (!id2obj.containsKey(id)) return false;
+		final Object obj = id2obj.get(id);
+		return id2obj.remove(id, obj) && obj2id.remove(obj, id);
+	}
 
 	@Override
 	public Object find(final String id) {

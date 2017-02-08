@@ -57,6 +57,20 @@ A collection of sample API calls to imagej-server using [Postman](https://www.ge
  
  `$ curl localhost:8080/io/objects`
 
+- __GET__ /io/objects/*{id}*
+
+ Shows the information of an object.
+ 
+ ```
+ $ curl localhost:8080/io/objects/object:1234567890abcdef
+ {"class":"net.imagej.DefaultDataset","created_at":"Sun Jan 01 00:00:00 CST 2017"}
+ ```
+- __DELETE__ /io/objects/*{id}*
+
+ Delete one object from imagej-server.
+ 
+ `$ curl -XDELETE localhost:8080/io/objects/object:1234567890abcdef`
+
 - __POST__ /io/file
 
  Uploads a file to server. A 16-bit lowercase alphanumeric ID prefixed with `object:` will be returned as a JSON string. The ID can be used in module execution to represent the file. Currently only supports uploading images.

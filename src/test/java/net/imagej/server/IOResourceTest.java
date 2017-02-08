@@ -31,12 +31,16 @@ import io.scif.services.DatasetIOService;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import net.imagej.Dataset;
 import net.imagej.server.resources.IOResource;
@@ -60,7 +64,9 @@ public class IOResourceTest extends AbstractResourceTest {
 	/**
 	 * A integrated test for the workflow using IOResource:<br/>
 	 * <li>upload file</li>
-	 * <li>request file</li>
+	 * <li>get IDs</li>
+	 * <li>get ID</li>
+	 * <li>remove ID</li>
 	 * <li>retrieve file</li>
 	 */
 	@Test
@@ -69,6 +75,22 @@ public class IOResourceTest extends AbstractResourceTest {
 			// Test uploadFile
 			final String imgID = uploadFile("imgs/about4.tif");
 			assertTrue(objectService.contains(imgID));
+
+			// Test getIDs
+			final String secondImg = uploadFile("imgs/about4.tif");
+			assertTrue(objectService.contains(secondImg));
+			assertTrue(!imgID.equals(secondImg));
+			final List<String> ids = Arrays.asList(getIDs());
+			assertTrue(ids.contains(imgID));
+			assertTrue(ids.contains(secondImg));
+
+			// Test getID
+			assertEquals(getID(imgID).getStatusInfo(), Status.OK);
+			assertEquals(getID(secondImg).getStatusInfo(), Status.OK);
+
+			// Test removeID
+			assertEquals(removeID(secondImg).getStatusInfo(), Status.OK);
+			assertEquals(getID(secondImg).getStatusInfo(), Status.NOT_FOUND);
 
 			// Test retrieveFile
 			final File downloaded = retrieveFile(imgID, "tiff");
@@ -86,6 +108,36 @@ public class IOResourceTest extends AbstractResourceTest {
 		catch (IOException exc) {
 			fail(exc.getMessage());
 		}
+	}
+
+	/**
+	 * Gets available IDs.
+	 * 
+	 * @return an array of IDs
+	 */
+	public String[] getIDs() {
+		return resources.client().target("/io/objects").request().get(
+			String[].class);
+	}
+
+	/**
+	 * Gets the detail of an object given its ID.
+	 * 
+	 * @param id object ID
+	 * @return response of request
+	 */
+	public Response getID(final String id) {
+		return resources.client().target("/io/objects/" + id).request().get();
+	}
+
+	/**
+	 * Removes an object given its ID.
+	 * 
+	 * @param id object ID
+	 * @return response of request
+	 */
+	public Response removeID(final String id) {
+		return resources.client().target("/io/objects/" + id).request().delete();
 	}
 
 	/**
