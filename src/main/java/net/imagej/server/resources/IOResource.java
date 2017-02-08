@@ -24,6 +24,7 @@ package net.imagej.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.scif.config.SCIFIOConfig;
 import io.scif.io.ByteArrayHandle;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
+import java.util.Date;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -107,6 +109,32 @@ public class IOResource {
 	@Path("objects")
 	public Set<String> getIds() {
 		return objectService.getIds();
+	}
+
+	/**
+	 * Shows the information of an object.
+	 * 
+	 * @param id object ID
+	 * @return a JSON node containing the object information
+	 */
+	@GET
+	@Path("objects/{id}")
+	public JsonNode getObjectInfo(@PathParam("id") final String id) {
+		if (!objectService.contains(id)) {
+			throw new WebApplicationException("ID does not exist", Status.NOT_FOUND);
+		}
+
+		final Object obj = objectService.find(id);
+		final String classStr = obj == null ? "null" : obj.getClass().getName();
+
+		final long createAt = Long.valueOf(id.substring("object:".length(),
+			"object:".length() + 8), 36);
+		final String createAtStr = new Date(createAt).toString();
+
+		final ObjectNode response = factory.objectNode();
+		response.set("class", factory.textNode(classStr));
+		response.set("created_at", factory.textNode(createAtStr));
+		return response;
 	}
 
 	/**
