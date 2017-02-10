@@ -71,9 +71,9 @@ A collection of sample API calls to imagej-server using [Postman](https://www.ge
  
  `$ curl -XDELETE localhost:8080/io/objects/object:1234567890abcdef`
 
-- __POST__ /io/file
+- __POST__ /io/file?[type=*{type}*]
 
- Uploads a file to server. A 16-bit lowercase alphanumeric ID prefixed with `object:` will be returned as a JSON string. The ID can be used in module execution to represent the file. Currently only supports uploading images.
+ Uploads a file to server. A 16-bit lowercase alphanumeric ID prefixed with `object:` will be returned as a JSON string. The ID can be used in module execution to represent the file. Currently only supports uploading images and tables in text. An optional query parameter `type` could be provided as hint to file type. If it is empty, filename would be used for guessing.
 
  ```
  $ curl -F "file=@src/test/resources/imgs/about4.tif" localhost:8080/io/file

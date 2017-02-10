@@ -59,9 +59,11 @@ import net.imagej.server.Utils;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
 
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.scijava.Context;
+import org.scijava.io.IOService;
 import org.scijava.plugin.Parameter;
 
 /**
@@ -84,6 +86,9 @@ public class IOResource {
 
 	@Parameter
 	private LocationService locationService;
+
+	@Parameter
+	private IOService ioService;
 
 	@Inject
 	private ObjectService objectService;
@@ -157,9 +162,14 @@ public class IOResource {
 
 	/**
 	 * Reads the user-uploaded file into the imagej runtime. Currently only
-	 * support images. An ID representing the data is returned.
+	 * support images and tables in text. An ID representing the data is returned.
+	 * <br/>
+	 * If no hint for format is provided, filename would be used to guess the file
+	 * format.
 	 *
 	 * @param fileInputStream file stream of the uploaded file
+	 * @param fileDetail "Content-Disposition" header
+	 * @param typeHint optional hint for file type
 	 * @return JSON string with format {"id":"object:{ID}"}
 	 */
 	@POST
@@ -167,44 +177,57 @@ public class IOResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Timed
 	public JsonNode uploadFile(
-		@FormDataParam("file") final InputStream fileInputStream)
+		@FormDataParam("file") final InputStream fileInputStream,
+		@FormDataParam("file") final FormDataContentDisposition fileDetail,
+		@QueryParam("type") final String typeHint)
 	{
-		// Maps a filename to a byte array in memory
-		final String filename = Utils.randomString(8);
-		final ByteArrayHandle bah = new ByteArrayHandle();
+		final ByteArrayHandle bah;
 		try {
-			locationService.mapFile(filename, bah);
+			bah = readFileInputStream(fileInputStream);
+		}
+		catch (IOException exc) {
+			throw new WebApplicationException(exc, Status.BAD_REQUEST);
+		}
 
-			// Reads input file into memory
-			final int BUFFER_SIZE = 8192;
-			final byte[] buffer = new byte[BUFFER_SIZE];
-			int n = 0;
-			try {
-				while ((n = fileInputStream.read(buffer)) != -1) {
-					bah.write(buffer, 0, n);
-				}
-			}
-			catch (IOException exc) {
-				throw new WebApplicationException(exc, Status.BAD_REQUEST);
-			}
+		// Maps a filename to a byte array in memory
+		final String filename = Utils.randomString(8) + "_" + fileDetail
+			.getFileName();
+		locationService.mapFile(filename, bah);
 
-			// Loads file as dataset
-			Dataset ds;
-			try {
-				ds = datasetIOService.open(filename);
-			}
-			catch (final IOException exc) {
-				throw new WebApplicationException(exc, Status.CONFLICT);
-			}
+		final String type;
+		if (typeHint != null && typeHint.length() != 0) {
+			type = typeHint.toLowerCase();
+		}
+		else {
+			final String mt = URLConnection.guessContentTypeFromName(fileDetail
+				.getFileName());
+			if (mt.indexOf('/') != -1) type = mt.substring(0, mt.indexOf('/'));
+			else type = mt;
+		}
 
-			final String id = objectService.register(ds);
-
-			return factory.objectNode().set("id", factory.textNode(id));
+		final Object obj;
+		try {
+			switch (type) {
+				case "image":
+					obj = datasetIOService.open(filename);
+					break;
+				case "text":
+					obj = ioService.open(filename);
+					break;
+				default:
+					throw new WebApplicationException("Unrecognized format",
+						Status.BAD_REQUEST);
+			}
+		}
+		catch (final Exception exc) {
+			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
 		finally {
-			// Removes mapping for GC to free memory
 			locationService.getIdMap().remove(filename, bah);
 		}
+
+		final String id = objectService.register(obj);
+		return factory.objectNode().set("id", factory.textNode(id));
 	}
 
 	/**
@@ -274,5 +297,23 @@ public class IOResource {
 			// Removes mapping for GC to free memory
 			locationService.getIdMap().remove(filename, bah);
 		}
+	}
+
+	// -- helper methods --
+
+	private ByteArrayHandle readFileInputStream(final InputStream fileInputStream)
+		throws IOException
+	{
+		final ByteArrayHandle bah = new ByteArrayHandle();
+
+		// Reads input file into memory
+		final int BUFFER_SIZE = 8192;
+		final byte[] buffer = new byte[BUFFER_SIZE];
+		int n = 0;
+		while ((n = fileInputStream.read(buffer)) != -1) {
+			bah.write(buffer, 0, n);
+		}
+		bah.seek(0);
+		return bah;
 	}
 }

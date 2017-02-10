@@ -45,6 +45,8 @@ import javax.ws.rs.core.Response.Status;
 import net.imagej.Dataset;
 import net.imagej.server.resources.IOResource;
 
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.ClassRule;
@@ -150,8 +152,9 @@ public class IOResourceTest extends AbstractResourceTest {
 	public String uploadFile(final String file) throws IOException {
 		final URL url = this.getClass().getClassLoader().getResource(file);
 		try (final FormDataMultiPart multiPart = new FormDataMultiPart()) {
-			multiPart.field("file", url.openStream(),
-				MediaType.MULTIPART_FORM_DATA_TYPE);
+			multiPart.bodyPart(new BodyPart(url.openStream(),
+				MediaType.MULTIPART_FORM_DATA_TYPE).contentDisposition(
+					FormDataContentDisposition.name("file").fileName(file).build()));
 			final String response = resources.client().register(
 				MultiPartFeature.class).target("/io/file").request().post(Entity.entity(
 					multiPart, multiPart.getMediaType()), String.class);
