@@ -51,13 +51,13 @@ A collection of sample API calls to imagej-server using [Postman](https://www.ge
  {"result":4}
  ```
 
-- __GET__ /io/objects
+- __GET__ /objects
 
  Lists all object IDs available on imagej-server.
  
  `$ curl localhost:8080/io/objects`
 
-- __GET__ /io/objects/*{id}*
+- __GET__ /objects/*{id}*
 
  Shows the information of an object.
  
@@ -65,26 +65,27 @@ A collection of sample API calls to imagej-server using [Postman](https://www.ge
  $ curl localhost:8080/io/objects/object:1234567890abcdef
  {"class":"net.imagej.DefaultDataset","created_at":"Sun Jan 01 00:00:00 CST 2017"}
  ```
-- __DELETE__ /io/objects/*{id}*
+
+- __DELETE__ /objects/*{id}*
 
  Delete one object from imagej-server.
  
- `$ curl -XDELETE localhost:8080/io/objects/object:1234567890abcdef`
+ `$ curl -XDELETE localhost:8080/objects/object:1234567890abcdef`
 
-- __POST__ /io/file?[type=*{type}*]
+- __POST__ /objects/upload?[type=*{type}*]
 
  Uploads a file to server. A 16-bit lowercase alphanumeric ID prefixed with `object:` will be returned as a JSON string. The ID can be used in module execution to represent the file. Currently only supports uploading images and tables in text. An optional query parameter `type` could be provided as hint to file type. If it is empty, filename would be used for guessing.
 
  ```
- $ curl -F "file=@src/test/resources/imgs/about4.tif" localhost:8080/io/file
+ $ curl -F "file=@src/test/resources/imgs/about4.tif" localhost:8080/objects/
  {"id":"object:0123456789abcdef"}
  ```
 
-- __POST__ /io/file/*{id}*?format=*{format}*
+- __GET__ /objects/*{id}*/*{format}*?[&key=*{value}*]...
 
- Download an object in some specific format from the server. The query parameter `format` is required.
+ Download an object in some specific format from the server. Optional uery parameters will be used for configuration depending on the type of the object.
 
- `$ curl -XPOST localhost:8080/io/object:0123456789abcdef?format=png`
+ `$ curl localhost:8080/objects/object:0123456789abcdef/png`
 
 - __DELETE__ /admin/stop
 

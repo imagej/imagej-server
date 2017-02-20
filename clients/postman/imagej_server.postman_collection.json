@@ -40,19 +40,20 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (!postman.getGlobalVariable(\"removed\")) {",
+							"if (postman.getGlobalVariable(\"removed\") !== \"true\") {",
 							"    tests[\"Status code is 200\"] = responseCode.code === 200;",
 							"    postman.setNextRequest(\"retrieve_img\");",
 							"} else {",
 							"    tests[\"Status code is 404\"] = responseCode.code === 404;",
 							"    postman.setNextRequest(postman.getGlobalVariable(\"then\"));",
-							"}"
+							"}",
+							"postman.setGlobalVariable(\"removed\", false);"
 						]
 					}
 				}
 			],
 			"request": {
-				"url": "{{host}}/io/objects/{{img-out}}",
+				"url": "{{host}}/objects/{{img-out}}",
 				"method": "GET",
 				"header": [],
 				"body": {},
@@ -77,7 +78,7 @@
 				}
 			],
 			"request": {
-				"url": "{{host}}/io/objects",
+				"url": "{{host}}/objects",
 				"method": "GET",
 				"header": [],
 				"body": {},
@@ -105,7 +106,7 @@
 				}
 			],
 			"request": {
-				"url": "{{host}}/io/file",
+				"url": "{{host}}/objects/upload",
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -116,7 +117,7 @@
 							"type": "file",
 							"enabled": true,
 							"warning": "",
-							"src": ""
+							"src": "about1.tif"
 						}
 					]
 				},
@@ -139,8 +140,8 @@
 				}
 			],
 			"request": {
-				"url": "{{host}}/io/file/{{img-out}}?format=png",
-				"method": "POST",
+				"url": "{{host}}/objects/{{img-out}}/png",
+				"method": "GET",
 				"header": [],
 				"body": {},
 				"description": ""
@@ -275,7 +276,7 @@
 				}
 			],
 			"request": {
-				"url": "{{host}}/io/objects/{{img-out}}",
+				"url": "{{host}}/objects/{{img-out}}",
 				"method": "DELETE",
 				"header": [],
 				"body": {},

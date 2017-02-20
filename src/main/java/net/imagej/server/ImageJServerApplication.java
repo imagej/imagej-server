@@ -27,8 +27,8 @@ import io.dropwizard.setup.Environment;
 
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.resources.AdminResource;
-import net.imagej.server.resources.IOResource;
 import net.imagej.server.resources.ModulesResource;
+import net.imagej.server.resources.ObjectsResource;
 import net.imagej.server.services.DefaultJsonService;
 import net.imagej.server.services.DefaultObjectService;
 import net.imagej.server.services.JsonService;
@@ -89,7 +89,7 @@ public class ImageJServerApplication extends
 
 		environment.jersey().register(ModulesResource.class);
 
-		environment.jersey().register(IOResource.class);
+		environment.jersey().register(ObjectsResource.class);
 
 		// -- context dependencies injection --
 
