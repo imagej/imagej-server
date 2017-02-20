@@ -100,8 +100,8 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 				File.class);
 			final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
 				.getAbsolutePath());
-			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID))
-				.iterator();
+			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID)
+				.getObject()).iterator();
 			final Iterator<?> actualItr = ds.iterator();
 			while (expectedItr.hasNext()) {
 				assertTrue(actualItr.hasNext());

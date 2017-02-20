@@ -24,7 +24,6 @@ package net.imagej.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.scif.config.SCIFIOConfig;
 import io.scif.io.ByteArrayHandle;
@@ -35,7 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
-import java.util.Date;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -58,6 +56,7 @@ import javax.ws.rs.core.UriInfo;
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.server.Utils;
+import net.imagej.server.services.ObjectInfo;
 import net.imagej.server.services.ObjectService;
 import net.imagej.table.Table;
 import net.imglib2.img.Img;
@@ -122,22 +121,11 @@ public class ObjectsResource {
 	 */
 	@GET
 	@Path("{id}")
-	public JsonNode getObjectInfo(@PathParam("id") final String id) {
+	public ObjectInfo getObjectInfo(@PathParam("id") final String id) {
 		if (!objectService.contains(id)) {
 			throw new WebApplicationException("ID does not exist", Status.NOT_FOUND);
 		}
-
-		final Object obj = objectService.find(id);
-		final String classStr = obj == null ? "null" : obj.getClass().getName();
-
-		final long createAt = Long.valueOf(id.substring("object:".length(),
-			"object:".length() + 8), 36);
-		final String createAtStr = new Date(createAt).toString();
-
-		final ObjectNode response = factory.objectNode();
-		response.set("class", factory.textNode(classStr));
-		response.set("created_at", factory.textNode(createAtStr));
-		return response;
+		return objectService.find(id);
 	}
 
 	/**
@@ -223,7 +211,8 @@ public class ObjectsResource {
 			locationService.getIdMap().remove(filename, bah);
 		}
 
-		final String id = objectService.register(obj);
+		final String id = objectService.register(obj, "uploadFile:filename=" +
+			fileDetail.getFileName());
 		return factory.objectNode().set("id", factory.textNode(id));
 	}
 
@@ -253,7 +242,7 @@ public class ObjectsResource {
 		locationService.mapFile(filename, bah);
 
 		try {
-			final Object obj = objectService.find(id);
+			final Object obj = objectService.find(id).getObject();
 			if (obj instanceof Img) {
 				final Dataset ds;
 				if (obj instanceof Dataset) {

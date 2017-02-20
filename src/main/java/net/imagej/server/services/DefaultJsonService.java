@@ -93,7 +93,9 @@ public class DefaultJsonService implements JsonService {
 				if (!objectService.contains(id)) {
 					throw new JsonMappingException(p, "Object does not exist");
 				}
-				return objectService.find(id);
+				final ObjectInfo info = objectService.find(id);
+				info.updateLastUsed();
+				return info.getObject();
 			}
 		};
 
@@ -106,7 +108,7 @@ public class DefaultJsonService implements JsonService {
 					SerializerProvider serializers) throws IOException,
 					JsonProcessingException
 			{
-					gen.writeString(objectService.register(value));
+					gen.writeString(objectService.register(value, "DefaultJsonService"));
 				}
 
 			};
