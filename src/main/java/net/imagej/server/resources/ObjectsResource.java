@@ -33,7 +33,6 @@ import io.scif.services.LocationService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLConnection;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -185,9 +184,8 @@ public class ObjectsResource {
 			type = typeHint.toLowerCase();
 		}
 		else {
-			final String mt = URLConnection.guessContentTypeFromName(filename);
-			if (mt.indexOf('/') != -1) type = mt.substring(0, mt.indexOf('/'));
-			else type = mt;
+			final String mt = Utils.getMimetype(filename);
+			type = mt.substring(0, mt.indexOf('/'));
 		}
 
 		final Object obj;
@@ -277,7 +275,7 @@ public class ObjectsResource {
 					output.write(bah.getBytes(), 0, (int) bah.length());
 				}
 			};
-			final String mt = URLConnection.guessContentTypeFromName(filename);
+			final String mt = Utils.getMimetype(filename);
 			return Response.ok(so, mt).header("Content-Length", bah.length()).build();
 		}
 		catch (final IOException exc) {

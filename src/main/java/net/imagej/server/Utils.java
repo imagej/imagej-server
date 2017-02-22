@@ -24,6 +24,8 @@ package net.imagej.server;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.activation.MimetypesFileTypeMap;
+
 /**
  * @author Leon Yang
  */
@@ -38,6 +40,8 @@ public class Utils {
 
 	public static final String alphanumeric_both =
 		"01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+	private static final MimetypesFileTypeMap mftm = new MimetypesFileTypeMap();
 
 	/**
 	 * Generates a lowercase alphanumeric random String.
@@ -79,6 +83,10 @@ public class Utils {
 	 */
 	public static String timestampedId(final int n) {
 		return timestampString() + randomString(n);
+	}
+
+	public static String getMimetype(final String filename) {
+		return mftm.getContentType(filename.toLowerCase());
 	}
 
 }
