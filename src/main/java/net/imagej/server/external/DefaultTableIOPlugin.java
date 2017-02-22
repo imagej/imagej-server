@@ -144,7 +144,8 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 
 		final GenericTable table = new DefaultGenericTable();
 		final Pattern pattern = Pattern.compile(String.format(
-			"(%1$s)|%2$c([^%2$c]*)%2$c|(%3$s)|(.)", eol, quote, separator));
+			"(%1$s)|%2$c([^%2$c]*)%2$c|(%3$s)|(.)", eol, quote, separator),
+			Pattern.DOTALL | Pattern.MULTILINE);
 		final Matcher m = pattern.matcher(text);
 
 		int numCols = -1;
