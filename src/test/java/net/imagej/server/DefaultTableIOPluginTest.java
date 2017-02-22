@@ -215,6 +215,13 @@ public class DefaultTableIOPluginTest {
 
 	}
 
+	@Test(expected = IOException.class)
+	public void testOpenNonExist() throws IOException {
+		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
+			.getInstance(DefaultTableIOPlugin.class);
+		tableIO.open("fake.csv");
+	}
+
 	// -- helper methods --
 
 	/**

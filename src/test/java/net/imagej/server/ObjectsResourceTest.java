@@ -29,7 +29,9 @@ import io.dropwizard.testing.junit.ResourceTestRule;
 import io.scif.services.DatasetIOService;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -74,9 +76,13 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 	@Test
 	public void ioResource() {
 		try {
-			// Test uploadFile
+			// Test upload image
 			final String imgID = uploadFile("imgs/about4.tif");
 			assertTrue(objectService.contains(imgID));
+
+			// Test upload table
+			final String tableID = uploadFile("texts/table.csv");
+			assertTrue(objectService.contains(tableID));
 
 			// Test getIDs
 			final String secondImg = uploadFile("imgs/about4.tif");
@@ -85,17 +91,19 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 			final List<String> ids = Arrays.asList(getIDs());
 			assertTrue(ids.contains(imgID));
 			assertTrue(ids.contains(secondImg));
+			assertTrue(ids.contains(tableID));
 
 			// Test getID
 			assertEquals(getObject(imgID).getStatusInfo(), Status.OK);
 			assertEquals(getObject(secondImg).getStatusInfo(), Status.OK);
+			assertEquals(getObject(tableID).getStatusInfo(), Status.OK);
 
 			// Test removeID
 			assertEquals(Status.OK, removeID(secondImg).getStatusInfo());
 			assertEquals(Status.NOT_FOUND, retrieveFile(secondImg, "fmt")
 				.getStatusInfo());
 
-			// Test retrieveFile
+			// Test retrieve image
 			final File downloaded = retrieveFile(imgID, "tiff").readEntity(
 				File.class);
 			final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
@@ -108,18 +116,28 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 				assertEquals(expectedItr.next(), actualItr.next());
 			}
 			assertTrue(!actualItr.hasNext());
+
+			// Test retrieve table
+			final File downloadTable = retrieveFile(tableID, "csv").readEntity(
+				File.class);
+			final String secondTable = uploadFile("secondTable.csv",
+				new FileInputStream(downloadTable));
+			assertEquals(objectService.find(tableID).getObject(), objectService.find(
+				secondTable).getObject());
 		}
 		catch (IOException exc) {
 			fail(exc.getMessage());
 		}
 	}
 
+	// -- helper methods --
+
 	/**
 	 * Gets available IDs.
 	 * 
 	 * @return an array of IDs
 	 */
-	public String[] getIDs() {
+	private String[] getIDs() {
 		return resources.client().target("/objects").request().get(String[].class);
 	}
 
@@ -129,7 +147,7 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 	 * @param id object ID
 	 * @return response of request
 	 */
-	public Response getObject(final String id) {
+	private Response getObject(final String id) {
 		return resources.client().target("/objects/" + id).request().get();
 	}
 
@@ -139,23 +157,30 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 	 * @param id object ID
 	 * @return response of request
 	 */
-	public Response removeID(final String id) {
+	private Response removeID(final String id) {
 		return resources.client().target("/objects/" + id).request().delete();
+	}
+
+	private String uploadFile(final String file) throws IOException {
+		final URL url = this.getClass().getClassLoader().getResource(file);
+		return uploadFile(file, url.openStream());
 	}
 
 	/**
 	 * Upload file to IOResource
 	 * 
-	 * @param file
+	 * @param filename name of file
+	 * @param stream stream of file content
 	 * @return the object ID of that file
 	 * @throws IOException
 	 */
-	public String uploadFile(final String file) throws IOException {
-		final URL url = this.getClass().getClassLoader().getResource(file);
+	private String uploadFile(final String filename, final InputStream stream)
+		throws IOException
+	{
 		try (final FormDataMultiPart multiPart = new FormDataMultiPart()) {
-			multiPart.bodyPart(new BodyPart(url.openStream(),
+			multiPart.bodyPart(new BodyPart(stream,
 				MediaType.MULTIPART_FORM_DATA_TYPE).contentDisposition(
-					FormDataContentDisposition.name("file").fileName(file).build()));
+					FormDataContentDisposition.name("file").fileName(filename).build()));
 			final String response = resources.client().register(
 				MultiPartFeature.class).target("/objects/upload").request().post(Entity
 					.entity(multiPart, multiPart.getMediaType()), String.class);
@@ -173,7 +198,7 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 	 * @param format format of the file to be saved
 	 * @return object as a file
 	 */
-	public Response retrieveFile(final String objectId, final String format) {
+	private Response retrieveFile(final String objectId, final String format) {
 		return resources.client().target("/objects/" + objectId + "/" + format)
 			.request().get(Response.class);
 	}

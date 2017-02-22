@@ -1,0 +1,4 @@
+this,"is,a,","""badly"" formated",table,for ,unit   testing
+1,-1,0,-1.0,1.0,0.0
++infinity,infinity,-infinity,+Nan,NaN,-NaN
+12345678.87654321,1.23e7,13.8f,57269d,0000.00001,1111
