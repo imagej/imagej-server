@@ -38,6 +38,7 @@ import java.util.Set;
 
 import net.imagej.ops.create.img.Imgs;
 import net.imagej.server.services.DefaultJsonService;
+import net.imagej.server.services.ObjectInfo;
 import net.imagej.server.services.ObjectService;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -102,9 +103,9 @@ public class DefaultJsonServiceTest {
 		inputs.put("img1", img1);
 		inputs.put("foo", foo);
 
-		objectService.register(img0);
-		objectService.register(img1);
-		objectService.register(foo);
+		objectService.register(img0, "");
+		objectService.register(img1, "");
+		objectService.register(foo, "");
 
 		@SuppressWarnings("unchecked")
 		final Map<String, Object> deserialized = modifiedMapper.readValue(fixture(
@@ -179,7 +180,7 @@ public class DefaultJsonServiceTest {
 	 */
 	private static class ListObjectService implements ObjectService {
 
-		private final ArrayList<Object> list = new ArrayList<>();
+		private final ArrayList<ObjectInfo> list = new ArrayList<>();
 
 		@Override
 		public Set<String> getIds() {
@@ -187,9 +188,10 @@ public class DefaultJsonServiceTest {
 		}
 
 		@Override
-		public String register(Object obj) {
-			list.add(obj);
-			return "object:" + String.valueOf(list.size() - 1);
+		public String register(final Object obj, final String createdBy) {
+			final String id = "object:" + String.valueOf(list.size());
+			list.add(new ListObjectInfo(id, obj));
+			return id;
 		}
 
 		@Override
@@ -198,7 +200,7 @@ public class DefaultJsonServiceTest {
 		}
 
 		@Override
-		public Object find(String id) {
+		public ObjectInfo find(String id) {
 			return list.get(Integer.valueOf(id.substring("object:".length())));
 		}
 
@@ -220,6 +222,48 @@ public class DefaultJsonServiceTest {
 		public String getFooString() {
 			return fooString;
 		}
+	}
+
+	private static class ListObjectInfo implements ObjectInfo {
+
+		private final String id;
+		private final Object object;
+
+		public ListObjectInfo(final String id, final Object object) {
+			this.id = id;
+			this.object = object;
+		}
+
+		@Override
+		public String getId() {
+			return id;
+		}
+
+		@Override
+		public Object getObject() {
+			return object;
+		}
+
+		@Override
+		public String getCreatedAt() {
+			return null;
+		}
+
+		@Override
+		public String getCreatedBy() {
+			return null;
+		}
+
+		@Override
+		public String getLastUsed() {
+			return null;
+		}
+
+		@Override
+		public void updateLastUsed() {
+			// No implementation needed
+		}
+
 	}
 
 }

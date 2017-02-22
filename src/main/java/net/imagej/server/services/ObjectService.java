@@ -38,10 +38,11 @@ public interface ObjectService {
 	/**
 	 * Registers an Object if it does not exist yet.
 	 * 
-	 * @param obj the Object to be registered.
+	 * @param object the Object to be registered.
+	 * @param createdBy information about where the object is created
 	 * @return the ID of the registered Object.
 	 */
-	String register(final Object obj);
+	String register(final Object object, final String createdBy);
 
 	/**
 	 * Removes an Object with the given ID.
@@ -57,7 +58,7 @@ public interface ObjectService {
 	 * @param id
 	 * @return Object with the given ID
 	 */
-	Object find(final String id);
+	ObjectInfo find(final String id);
 
 	/**
 	 * Checks if exists an Object with the given ID.

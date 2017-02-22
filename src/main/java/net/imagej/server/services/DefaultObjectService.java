@@ -34,8 +34,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.imagej.server.Utils;
-
 /**
  * Service that handles concurrent Object registration and retrieval using IDs.
  * 
@@ -43,7 +41,7 @@ import net.imagej.server.Utils;
  */
 public class DefaultObjectService implements ObjectService {
 
-	final private ConcurrentHashMap<String, Object> id2obj;
+	final private ConcurrentHashMap<String, ObjectInfo> id2obj;
 	final private ConcurrentHashMap<Object, String> obj2id;
 
 	public DefaultObjectService() {
@@ -57,25 +55,25 @@ public class DefaultObjectService implements ObjectService {
 	}
 
 	@Override
-	public String register(final Object obj) {
-		final String id = "object:" + Utils.timestampedId(8);
-		final String prev = obj2id.putIfAbsent(obj, id);
+	public String register(final Object object, final String createdBy) {
+		final DefaultObjectInfo info = new DefaultObjectInfo(object, createdBy);
+		final String prev = obj2id.putIfAbsent(object, info.getId());
 
 		if (prev != null) return prev;
 
-		id2obj.put(id, obj);
-		return id;
-	}
-	
-	@Override
-	public boolean remove(final String id) {
-		if (!id2obj.containsKey(id)) return false;
-		final Object obj = id2obj.get(id);
-		return id2obj.remove(id, obj) && obj2id.remove(obj, id);
+		id2obj.put(info.getId(), info);
+		return info.getId();
 	}
 
 	@Override
-	public Object find(final String id) {
+	public boolean remove(final String id) {
+		if (!id2obj.containsKey(id)) return false;
+		final ObjectInfo info = id2obj.get(id);
+		return id2obj.remove(id, info) && obj2id.remove(info.getObject(), id);
+	}
+
+	@Override
+	public ObjectInfo find(final String id) {
 		return id2obj.get(id);
 	}
 

@@ -29,7 +29,9 @@ import io.dropwizard.testing.junit.ResourceTestRule;
 import io.scif.services.DatasetIOService;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -43,23 +45,25 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import net.imagej.Dataset;
-import net.imagej.server.resources.IOResource;
+import net.imagej.server.resources.ObjectsResource;
 
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
- * Test for {@link IOResource}.
+ * Test for {@link ObjectsResource}.
  * 
  * @author Leon Yang
  */
-public class IOResourceTest extends AbstractResourceTest {
+public class ObjectsResourceTest extends AbstractResourceTest {
 
 	@ClassRule
 	public static final ResourceTestRule resources = resourcesBuilder.addProvider(
-		MultiPartFeature.class).addProvider(IOResource.class).build();
+		MultiPartFeature.class).addProvider(ObjectsResource.class).build();
 
 	/**
 	 * A integrated test for the workflow using IOResource:<br/>
@@ -72,9 +76,13 @@ public class IOResourceTest extends AbstractResourceTest {
 	@Test
 	public void ioResource() {
 		try {
-			// Test uploadFile
+			// Test upload image
 			final String imgID = uploadFile("imgs/about4.tif");
 			assertTrue(objectService.contains(imgID));
+
+			// Test upload table
+			final String tableID = uploadFile("texts/table.csv");
+			assertTrue(objectService.contains(tableID));
 
 			// Test getIDs
 			final String secondImg = uploadFile("imgs/about4.tif");
@@ -83,41 +91,54 @@ public class IOResourceTest extends AbstractResourceTest {
 			final List<String> ids = Arrays.asList(getIDs());
 			assertTrue(ids.contains(imgID));
 			assertTrue(ids.contains(secondImg));
+			assertTrue(ids.contains(tableID));
 
 			// Test getID
-			assertEquals(getID(imgID).getStatusInfo(), Status.OK);
-			assertEquals(getID(secondImg).getStatusInfo(), Status.OK);
+			assertEquals(getObject(imgID).getStatusInfo(), Status.OK);
+			assertEquals(getObject(secondImg).getStatusInfo(), Status.OK);
+			assertEquals(getObject(tableID).getStatusInfo(), Status.OK);
 
 			// Test removeID
-			assertEquals(removeID(secondImg).getStatusInfo(), Status.OK);
-			assertEquals(getID(secondImg).getStatusInfo(), Status.NOT_FOUND);
+			assertEquals(Status.OK, removeID(secondImg).getStatusInfo());
+			assertEquals(Status.NOT_FOUND, retrieveFile(secondImg, "fmt")
+				.getStatusInfo());
 
-			// Test retrieveFile
-			final File downloaded = retrieveFile(imgID, "tiff");
+			// Test retrieve image
+			final File downloaded = retrieveFile(imgID, "tiff").readEntity(
+				File.class);
 			final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
 				.getAbsolutePath());
-			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID))
-				.iterator();
+			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID)
+				.getObject()).iterator();
 			final Iterator<?> actualItr = ds.iterator();
 			while (expectedItr.hasNext()) {
 				assertTrue(actualItr.hasNext());
 				assertEquals(expectedItr.next(), actualItr.next());
 			}
 			assertTrue(!actualItr.hasNext());
+
+			// Test retrieve table
+			final File downloadTable = retrieveFile(tableID, "csv").readEntity(
+				File.class);
+			final String secondTable = uploadFile("secondTable.csv",
+				new FileInputStream(downloadTable));
+			assertEquals(objectService.find(tableID).getObject(), objectService.find(
+				secondTable).getObject());
 		}
 		catch (IOException exc) {
 			fail(exc.getMessage());
 		}
 	}
 
+	// -- helper methods --
+
 	/**
 	 * Gets available IDs.
 	 * 
 	 * @return an array of IDs
 	 */
-	public String[] getIDs() {
-		return resources.client().target("/io/objects").request().get(
-			String[].class);
+	private String[] getIDs() {
+		return resources.client().target("/objects").request().get(String[].class);
 	}
 
 	/**
@@ -126,8 +147,8 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * @param id object ID
 	 * @return response of request
 	 */
-	public Response getID(final String id) {
-		return resources.client().target("/io/objects/" + id).request().get();
+	private Response getObject(final String id) {
+		return resources.client().target("/objects/" + id).request().get();
 	}
 
 	/**
@@ -136,25 +157,33 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * @param id object ID
 	 * @return response of request
 	 */
-	public Response removeID(final String id) {
-		return resources.client().target("/io/objects/" + id).request().delete();
+	private Response removeID(final String id) {
+		return resources.client().target("/objects/" + id).request().delete();
+	}
+
+	private String uploadFile(final String file) throws IOException {
+		final URL url = this.getClass().getClassLoader().getResource(file);
+		return uploadFile(file, url.openStream());
 	}
 
 	/**
 	 * Upload file to IOResource
 	 * 
-	 * @param file
+	 * @param filename name of file
+	 * @param stream stream of file content
 	 * @return the object ID of that file
 	 * @throws IOException
 	 */
-	public String uploadFile(final String file) throws IOException {
-		final URL url = this.getClass().getClassLoader().getResource(file);
+	private String uploadFile(final String filename, final InputStream stream)
+		throws IOException
+	{
 		try (final FormDataMultiPart multiPart = new FormDataMultiPart()) {
-			multiPart.field("file", url.openStream(),
-				MediaType.MULTIPART_FORM_DATA_TYPE);
+			multiPart.bodyPart(new BodyPart(stream,
+				MediaType.MULTIPART_FORM_DATA_TYPE).contentDisposition(
+					FormDataContentDisposition.name("file").fileName(filename).build()));
 			final String response = resources.client().register(
-				MultiPartFeature.class).target("/io/file").request().post(Entity.entity(
-					multiPart, multiPart.getMediaType()), String.class);
+				MultiPartFeature.class).target("/objects/upload").request().post(Entity
+					.entity(multiPart, multiPart.getMediaType()), String.class);
 			final Matcher matcher = Pattern.compile("\\{\"id\":\"([^\"]+)\"\\}")
 				.matcher(response);
 			assertTrue(matcher.find());
@@ -169,8 +198,8 @@ public class IOResourceTest extends AbstractResourceTest {
 	 * @param format format of the file to be saved
 	 * @return object as a file
 	 */
-	public File retrieveFile(final String objectId, final String format) {
-		return resources.client().target("/io/file/" + objectId).queryParam(
-			"format", format).request().post(null, File.class);
+	private Response retrieveFile(final String objectId, final String format) {
+		return resources.client().target("/objects/" + objectId + "/" + format)
+			.request().get(Response.class);
 	}
 }

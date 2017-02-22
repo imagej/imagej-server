@@ -24,7 +24,6 @@ package net.imagej.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.scif.config.SCIFIOConfig;
 import io.scif.io.ByteArrayHandle;
@@ -34,8 +33,6 @@ import io.scif.services.LocationService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLConnection;
-import java.util.Date;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -48,33 +45,35 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriInfo;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
 import net.imagej.server.Utils;
+import net.imagej.server.services.ObjectInfo;
 import net.imagej.server.services.ObjectService;
+import net.imagej.table.Table;
 import net.imglib2.img.Img;
 
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.scijava.Context;
+import org.scijava.io.IOService;
 import org.scijava.plugin.Parameter;
 
 /**
- * Server resource for managing I/O operations, including:
- * <li>upload image</li>
- * <li>request image download</li>
- * <li>download image</li> </br>
+ * Server resource for managing data structures that could not be easily handled
+ * with JSON,
  *
  * @author Leon Yang
  */
-@Path("/io")
+@Path("/objects")
 @Produces(MediaType.APPLICATION_JSON)
-public class IOResource {
+public class ObjectsResource {
 
 	@Parameter
 	private DatasetService datasetService;
@@ -84,6 +83,9 @@ public class IOResource {
 
 	@Parameter
 	private LocationService locationService;
+
+	@Parameter
+	private IOService ioService;
 
 	@Inject
 	private ObjectService objectService;
@@ -96,7 +98,7 @@ public class IOResource {
 	 * @param ctx
 	 */
 	@Inject
-	public void initialize(final Context ctx) {
+	public void initialize(final org.scijava.Context ctx) {
 		ctx.inject(this);
 	}
 
@@ -106,7 +108,6 @@ public class IOResource {
 	 * @return a list of object IDs
 	 */
 	@GET
-	@Path("objects")
 	public Set<String> getIds() {
 		return objectService.getIds();
 	}
@@ -118,23 +119,12 @@ public class IOResource {
 	 * @return a JSON node containing the object information
 	 */
 	@GET
-	@Path("objects/{id}")
-	public JsonNode getObjectInfo(@PathParam("id") final String id) {
+	@Path("{id}")
+	public ObjectInfo getObjectInfo(@PathParam("id") final String id) {
 		if (!objectService.contains(id)) {
 			throw new WebApplicationException("ID does not exist", Status.NOT_FOUND);
 		}
-
-		final Object obj = objectService.find(id);
-		final String classStr = obj == null ? "null" : obj.getClass().getName();
-
-		final long createAt = Long.valueOf(id.substring("object:".length(),
-			"object:".length() + 8), 36);
-		final String createAtStr = new Date(createAt).toString();
-
-		final ObjectNode response = factory.objectNode();
-		response.set("class", factory.textNode(classStr));
-		response.set("created_at", factory.textNode(createAtStr));
-		return response;
+		return objectService.find(id);
 	}
 
 	/**
@@ -144,7 +134,7 @@ public class IOResource {
 	 * @return response
 	 */
 	@DELETE
-	@Path("objects/{id}")
+	@Path("{id}")
 	public Response removeObject(@PathParam("id") final String id) {
 		if (!objectService.contains(id)) {
 			throw new WebApplicationException("ID does not exist", Status.NOT_FOUND);
@@ -157,108 +147,128 @@ public class IOResource {
 
 	/**
 	 * Reads the user-uploaded file into the imagej runtime. Currently only
-	 * support images. An ID representing the data is returned.
+	 * support images and tables in text. An ID representing the data is returned.
+	 * <br/>
+	 * If no hint for format is provided, filename would be used to guess the file
+	 * format.
 	 *
 	 * @param fileInputStream file stream of the uploaded file
+	 * @param fileDetail "Content-Disposition" header
+	 * @param typeHint optional hint for file type
 	 * @return JSON string with format {"id":"object:{ID}"}
 	 */
 	@POST
-	@Path("file")
+	@Path("upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Timed
 	public JsonNode uploadFile(
-		@FormDataParam("file") final InputStream fileInputStream)
+		@FormDataParam("file") final InputStream fileInputStream,
+		@FormDataParam("file") final FormDataContentDisposition fileDetail,
+		@QueryParam("type") final String typeHint)
 	{
-		// Maps a filename to a byte array in memory
-		final String filename = Utils.randomString(8);
-		final ByteArrayHandle bah = new ByteArrayHandle();
+		final ByteArrayHandle bah;
 		try {
-			locationService.mapFile(filename, bah);
+			bah = readFileInputStream(fileInputStream);
+		}
+		catch (IOException exc) {
+			throw new WebApplicationException(exc, Status.BAD_REQUEST);
+		}
 
-			// Reads input file into memory
-			final int BUFFER_SIZE = 8192;
-			final byte[] buffer = new byte[BUFFER_SIZE];
-			int n = 0;
-			try {
-				while ((n = fileInputStream.read(buffer)) != -1) {
-					bah.write(buffer, 0, n);
-				}
-			}
-			catch (IOException exc) {
-				throw new WebApplicationException(exc, Status.BAD_REQUEST);
-			}
+		// Maps a filename to a byte array in memory
+		final String filename = Utils.randomString(8) + "_" + fileDetail
+			.getFileName();
+		locationService.mapFile(filename, bah);
 
-			// Loads file as dataset
-			Dataset ds;
-			try {
-				ds = datasetIOService.open(filename);
-			}
-			catch (final IOException exc) {
-				throw new WebApplicationException(exc, Status.CONFLICT);
-			}
+		final String type;
+		if (typeHint != null && typeHint.length() != 0) {
+			type = typeHint.toLowerCase();
+		}
+		else {
+			final String mt = Utils.getMimetype(filename);
+			type = mt.substring(0, mt.indexOf('/'));
+		}
 
-			final String id = objectService.register(ds);
-
-			return factory.objectNode().set("id", factory.textNode(id));
+		final Object obj;
+		try {
+			switch (type) {
+				case "image":
+					obj = datasetIOService.open(filename);
+					break;
+				case "text":
+					obj = ioService.open(filename);
+					break;
+				default:
+					throw new WebApplicationException("Unrecognized format",
+						Status.BAD_REQUEST);
+			}
+		}
+		catch (final WebApplicationException exc) {
+			throw exc;
+		}
+		catch (final IOException exc) {
+			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
 		finally {
-			// Removes mapping for GC to free memory
 			locationService.getIdMap().remove(filename, bah);
 		}
+
+		final String id = objectService.register(obj, "uploadFile:filename=" +
+			fileDetail.getFileName());
+		return factory.objectNode().set("id", factory.textNode(id));
 	}
 
 	/**
 	 * Retrieves an object in a specific format.
 	 *
-	 * @param objectId object ID
+	 * @param id object ID
 	 * @param format format of the object to be saved into
-	 * @param config optional config for saving the object (not tested)
+	 * @param uriInfo used for obtaining query parameters for config
 	 * @return Response with the object as content
 	 */
 	@SuppressWarnings("unchecked")
-	@POST
-	@Path("file/{id}")
+	@GET
+	@Path("{id}/{format}")
 	@Timed
-	public Response retrieveFile(@PathParam("id") final String objectId,
-		@QueryParam("format") @NotEmpty final String format,
-		final SCIFIOConfig config)
+	public Response getObject(@PathParam("id") final String id,
+		@PathParam("format") final String format, @Context final UriInfo uriInfo)
 	{
-		final Object obj = objectService.find(objectId);
-		if (obj == null) {
-			throw new WebApplicationException("File does not exist",
+		if (!objectService.contains(id)) {
+			throw new WebApplicationException("Object does not exist",
 				Status.NOT_FOUND);
 		}
-		if (!(obj instanceof Img)) {
-			throw new WebApplicationException("Object is not an image",
-				Status.BAD_REQUEST);
-		}
 
-		final Dataset ds;
-		if (obj instanceof Dataset) {
-			ds = (Dataset) obj;
-		}
-		else {
-			@SuppressWarnings({ "rawtypes" })
-			final Img img = (Img) obj;
-			ds = datasetService.create(img);
-		}
-
-		// Maps a filename to a byte array in memory
 		final String filename = String.format("%s.%s", Utils.timestampedId(8),
 			format);
 		final ByteArrayHandle bah = new ByteArrayHandle();
-		try {
-			locationService.mapFile(filename, bah);
+		locationService.mapFile(filename, bah);
 
-			try {
+		try {
+			final Object obj = objectService.find(id).getObject();
+			if (obj instanceof Img) {
+				final Dataset ds;
+				if (obj instanceof Dataset) {
+					ds = (Dataset) obj;
+				}
+				else {
+					@SuppressWarnings({ "rawtypes" })
+					final Img img = (Img) obj;
+					ds = datasetService.create(img);
+				}
+				// TODO: inject query parameters into config
+				final SCIFIOConfig config = new SCIFIOConfig();
 				datasetIOService.save(ds, filename, config);
 			}
-			catch (final IOException exc) {
-				locationService.getIdMap().remove(filename, bah);
-				throw new WebApplicationException(exc, Status.CONFLICT);
+			else if (obj instanceof Table) {
+				// TODO: inject query parameters into IOPlugin (DefaultTableIOPlugin)
+				ioService.save(obj, filename);
+			}
+			else {
+				final String type = obj == null ? "null" : obj.getClass().getName();
+				throw new WebApplicationException(
+					"Retrival for Object type not supported yet: " + type,
+					Status.BAD_REQUEST);
 			}
 
-			final String mt = URLConnection.guessContentTypeFromName(filename);
 			final StreamingOutput so = new StreamingOutput() {
 
 				@Override
@@ -268,11 +278,34 @@ public class IOResource {
 					output.write(bah.getBytes(), 0, (int) bah.length());
 				}
 			};
+			final String mt = Utils.getMimetype(filename);
 			return Response.ok(so, mt).header("Content-Length", bah.length()).build();
 		}
+		catch (final WebApplicationException exc) {
+			throw exc;
+		}
+		catch (final IOException exc) {
+			throw new WebApplicationException(exc, Status.CONFLICT);
+		}
 		finally {
-			// Removes mapping for GC to free memory
 			locationService.getIdMap().remove(filename, bah);
 		}
+	}
+
+	// -- helper methods --
+
+	private ByteArrayHandle readFileInputStream(final InputStream fileInputStream)
+		throws IOException
+	{
+		final ByteArrayHandle bah = new ByteArrayHandle();
+
+		// Reads input file into memory
+		final int BUFFER_SIZE = 8192;
+		final byte[] buffer = new byte[BUFFER_SIZE];
+		int n = 0;
+		while ((n = fileInputStream.read(buffer)) != -1) {
+			bah.write(buffer, 0, n);
+		}
+		return bah;
 	}
 }
