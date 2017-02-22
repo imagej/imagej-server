@@ -202,7 +202,10 @@ public class ObjectsResource {
 						Status.BAD_REQUEST);
 			}
 		}
-		catch (final Exception exc) {
+		catch (final WebApplicationException exc) {
+			throw exc;
+		}
+		catch (final IOException exc) {
 			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
 		finally {
@@ -277,6 +280,9 @@ public class ObjectsResource {
 			};
 			final String mt = Utils.getMimetype(filename);
 			return Response.ok(so, mt).header("Content-Length", bah.length()).build();
+		}
+		catch (final WebApplicationException exc) {
+			throw exc;
 		}
 		catch (final IOException exc) {
 			throw new WebApplicationException(exc, Status.CONFLICT);
