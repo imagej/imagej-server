@@ -133,10 +133,11 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 
 	@Override
 	public GenericTable open(final String source) throws IOException {
-		final IRandomAccess handle = locationService.getHandle(source, false);
+		final IRandomAccess handle = locationService.getHandle(source);
 		if (handle instanceof VirtualHandle) {
 			throw new IOException("Cannot open source");
 		}
+		handle.seek(0);
 		final byte[] buffer = new byte[(int) handle.length()];
 		handle.read(buffer);
 		final String text = new String(buffer);
@@ -221,6 +222,7 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 		if (handle instanceof VirtualHandle) {
 			throw new IOException("Cannot open source");
 		}
+		handle.seek(0);
 
 		final boolean writeRH = this.writeRowHeaders && table.getRowCount() > 0 &&
 			IntStream.range(0, table.getRowCount()).allMatch(row -> table

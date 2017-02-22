@@ -302,7 +302,6 @@ public class ObjectsResource {
 		while ((n = fileInputStream.read(buffer)) != -1) {
 			bah.write(buffer, 0, n);
 		}
-		bah.seek(0);
 		return bah;
 	}
 }
