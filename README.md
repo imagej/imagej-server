@@ -1,4 +1,4 @@
-[![](http://jenkins.imagej.net/job/ImageJ-Server/lastBuild/badge/icon)](http://jenkins.imagej.net/job/ImageJ-Server/)
+[![](https://travis-ci.org/imagej/imagej-server.svg?branch=master)](https://travis-ci.org/imagej/imagej-server)
 [![Join the chat at https://gitter.im/imagej/imagej-server](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/imagej/imagej-server?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # ImageJ Server
