@@ -1,4 +1,7 @@
-.*
-!.gitignore
-
+# Maven #
 /target/
+
+# Eclipse #
+/.classpath
+/.project
+/.settings/
