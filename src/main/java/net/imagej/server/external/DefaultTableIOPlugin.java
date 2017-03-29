@@ -30,10 +30,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 import net.imagej.table.DefaultGenericTable;
@@ -75,15 +74,11 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 
 	/** Regex pattern that separates cells in each row of the table. */
 	@Parameter(required = false)
-	private String separator = ",";
+	private char separator = ',';
 
 	/** End of line when writing to file. */
 	@Parameter(required = false)
 	private String eol = System.lineSeparator();
-
-	/** Skips empty lines. */
-	@Parameter(required = false)
-	private boolean skipEmpty = true;
 
 	/**
 	 * Quote character used for escaping separator and empty strings. Use two
@@ -131,6 +126,61 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 		return supportsOpen(source);
 	}
 
+	/**
+	 * Process a given line into a list of tokens.
+	 */
+	private ArrayList<String> processRow(final String line) throws IOException {
+		final ArrayList<String> row = new ArrayList<>();
+		final StringBuilder sb = new StringBuilder();
+		int idx = 0;
+		int start = idx;
+		while (idx < line.length()) {
+			if (line.charAt(idx) == quote) {
+				sb.append(line.substring(start, idx));
+				boolean quoted = true;
+				idx++;
+				start = idx;
+				// find quoted string
+				while (idx < line.length()) {
+					if (line.charAt(idx) == quote) {
+						sb.append(line.substring(start, idx));
+						if (idx + 1 < line.length() && line.charAt(idx + 1) == quote) {
+							sb.append(quote);
+							idx += 2;
+							start = idx;
+						}
+						else {
+							idx++;
+							start = idx;
+							quoted = false;
+							break;
+						}
+					}
+					else {
+						idx++;
+					}
+				}
+				if (quoted) {
+					throw new IOException(String.format(
+						"Unbalanced quote at position %d: %s", idx, line));
+				}
+			}
+			else if (line.charAt(idx) == separator) {
+				sb.append(line.substring(start, idx));
+				row.add(sb.toString());
+				sb.setLength(0);
+				idx++;
+				start = idx;
+			}
+			else {
+				idx++;
+			}
+		}
+		sb.append(line.substring(start, idx));
+		row.add(sb.toString());
+		return row;
+	}
+
 	@Override
 	public GenericTable open(final String source) throws IOException {
 		final IRandomAccess handle = locationService.getHandle(source);
@@ -143,73 +193,55 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 		final String text = new String(buffer);
 
 		final GenericTable table = new DefaultGenericTable();
-		final Pattern pattern = Pattern.compile(String.format(
-			"(%1$s)|%2$c([^%2$c]*)%2$c|(%3$s)|(.)", eol, quote, separator),
-			Pattern.DOTALL | Pattern.MULTILINE);
-		final Matcher m = pattern.matcher(text);
 
-		int numCols = -1;
-		int row = 0;
-		final ArrayList<String> tokens = new ArrayList<>();
-		final StringBuilder sb = new StringBuilder();
-		// To find consecutive quotes
-		boolean wasQuoted = false;
-		// Used to differentiate empty lines and lines with empty cells
-		boolean lineEmpty = true;
-		while (true) {
-			// EOL or EOF
-			if (!m.find() || m.group(1) != null) {
-				if (!lineEmpty) tokens.add(sb.toString());
-				sb.setLength(0);
-				lineEmpty = true;
-				wasQuoted = false;
-				if (tokens.size() == 0) {
-					if (m.hitEnd()) break;
-					if (!skipEmpty) table.appendRow();
-					continue;
-				}
-				final String rowHeader = readRowHeaders ? tokens.remove(0) : null;
-				if (numCols == -1) {
-					numCols = tokens.size();
-					if (readColHeaders) {
-						table.appendColumns(tokens.toArray(new String[numCols]));
-						tokens.clear();
-						continue;
-					}
-					table.appendColumns(numCols);
-				}
-				if (tokens.size() != numCols) {
-					throw new IOException("Line " + row +
-						" is not the same length as the first line.");
-				}
-				if (readRowHeaders) table.appendRow(rowHeader);
-				else table.appendRow();
-				for (int col = 0; col < numCols; col++) {
-					table.set(col, row, parser.apply(tokens.get(col)));
-				}
-				row++;
-				tokens.clear();
+		// split by any line delimiter
+		final String[] lines = text.split("\\R");
+		if (lines.length == 0) return table;
+		// process first line to get number of cols
+		{
+			final ArrayList<String> tokens = processRow(lines[0]);
+			if (readColHeaders) {
+				final List<String> colHeaders;
+				if (readRowHeaders) colHeaders = tokens.subList(1, tokens.size());
+				else colHeaders = tokens;
+				final String[] colHeadersArr = new String[colHeaders.size()];
+				table.appendColumns(colHeaders.toArray(colHeadersArr));
 			}
-			// Quoted
-			else if (m.group(2) != null) {
-				// Two consecutive quotes that are not paired escape one quote
-				if (wasQuoted) sb.append(quote);
-				sb.append(m.group(2));
-				lineEmpty = false;
-				wasQuoted = true;
-			}
-			// Separator
-			else if (m.group(3) != null) {
-				tokens.add(sb.toString());
-				sb.setLength(0);
-				lineEmpty = false;
-				wasQuoted = false;
-			}
-			// Single character
 			else {
-				sb.append(m.group(4));
-				lineEmpty = false;
-				wasQuoted = false;
+				final List<String> cols;
+				if (readRowHeaders) {
+					cols = tokens.subList(1, tokens.size());
+					table.appendColumns(cols.size());
+					table.appendRow(tokens.get(0));
+				}
+				else {
+					cols = tokens;
+					table.appendColumns(cols.size());
+					table.appendRow();
+				}
+				for (int i = 0; i < cols.size(); i++) {
+					table.set(i, 0, parser.apply(cols.get(i)));
+				}
+			}
+		}
+		for (int lineNum = 1; lineNum < lines.length; lineNum++) {
+			final String line = lines[lineNum];
+			final ArrayList<String> tokens = processRow(line);
+			final List<String> cols;
+			if (readRowHeaders) {
+				cols = tokens.subList(1, tokens.size());
+				table.appendRow(tokens.get(0));
+			}
+			else {
+				cols = tokens;
+				table.appendRow();
+			}
+			if (cols.size() != table.getColumnCount()) {
+				throw new IOException("Line " + table.getRowCount() +
+					" is not the same length as the first line.");
+			}
+			for (int i = 0; i < cols.size(); i++) {
+				table.set(i, lineNum - 1, parser.apply(cols.get(i)));
 			}
 		}
 		return table;
@@ -290,8 +322,7 @@ public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 		if (str == null || str.length() == 0) return "" + quote + quote;
 		if (str.indexOf(quote) != -1) return quote + str.replace("" + quote, "" +
 			quote + quote) + quote;
-		if (str.contains(separator) || str.contains(eol)) return quote + str +
-			quote;
+		if (str.indexOf(separator) != -1) return quote + str + quote;
 		return str;
 	}
 }

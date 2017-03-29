@@ -78,9 +78,9 @@ public class DefaultTableIOPluginTest {
 			final Function<Double, String> formatter = val -> String.format("%.3f",
 				val);
 			setValues(tableIO, new String[] { "readColHeaders", "writeColHeaders",
-				"readRowHeaders", "writeRowHeaders", "separator", "eol", "skipEmpty",
-				"quote", "cornerText", "parser", "formatter" }, new Object[] { true,
-					true, false, true, "\t", "\n", true, "\"", "\\", parser, formatter });
+				"readRowHeaders", "writeRowHeaders", "separator", "eol", "quote",
+				"cornerText", "parser", "formatter" }, new Object[] { true, true, false,
+					true, "\t", "\n", "\"", "\\", parser, formatter });
 
 			final GenericTable table = openTable(tableSource, tableIO);
 			assertTableEquals(colHeaders, rowHeaders, content, table);
@@ -98,39 +98,37 @@ public class DefaultTableIOPluginTest {
 	@Test
 	public void testQuote() {
 		final String[][] cells = { { "CORNER_TEXT",
-			"' col  1 with white   spaces '", "'col 2 with new \r\n line'",
-			"'col 3 with ''QUOTE'' inside'", "'col 4 'connect,two' quoted strings'" },
-			{ "'quotes across lines'", "should\tnot,break", "'unnecessary_quotes'",
-				"should break" }, { "" }, { "" }, { "some,empty,cells", "", "''",
+			"' col  1 with white   spaces '", "'col 2 with ''QUOTE'' inside'",
+			"'col 3 'connect,two' quoted strings'" }, { "should\tnot,break",
+				"'unnecessary_quotes'", "should break" }, { "some,empty,cells", "",
 					" ''" } };
 		final String tableSource = makeTableSource(cells, " ", "\r\n");
 
 		final String[] colHeaders = { " col  1 with white   spaces ",
-			"col 2 with new \r\n line", "col 3 with 'QUOTE' inside",
-			"col 4 connect,two quoted strings" };
-		final String[] rowHeaders = { "quotes across lines", "some,empty,cells" };
-		final String[][] content = { { "should\tnot,break", "unnecessary_quotes",
-			"should", "break" }, { "", "", "", "" } };
+			"col 2 with 'QUOTE' inside", "col 3 connect,two quoted strings" };
+		final String[] rowHeaders = { "should\tnot,break", "some,empty,cells" };
+		final String[][] content = { { "unnecessary_quotes", "should", "break" }, {
+			"", "", "" } };
 
 		final String expected = "CORNER_TEXT, col  1 with white   spaces ," +
-			"'col 2 with new \r\n line','col 3 with ''QUOTE'' inside'," +
-			"'col 4 connect,two quoted strings'\r\n" +
-			"quotes across lines,'should\tnot,break',unnecessary_quotes,should,break\r\n" +
-			"'some,empty,cells','','','',''\r\n";
+			"'col 2 with ''QUOTE'' inside'," +
+			"'col 3 connect,two quoted strings'\r\n" +
+			"'should\tnot,break',unnecessary_quotes,should,break\r\n" +
+			"'some,empty,cells','','',''\r\n";
 
 		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
 			.getInstance(DefaultTableIOPlugin.class);
 		try {
 			setValues(tableIO, new String[] { "readColHeaders", "writeColHeaders",
-				"readRowHeaders", "writeRowHeaders", "separator", "eol", "skipEmpty",
-				"quote", "cornerText", "parser", "formatter" }, new Object[] { true,
-					true, true, true, " ", "\r\n", true, "'", "CORNER_TEXT", Function
-						.identity(), Function.identity() });
+				"readRowHeaders", "writeRowHeaders", "separator", "eol", "quote",
+				"cornerText", "parser", "formatter" }, new Object[] { true, true, true,
+					true, " ", "\r\n", '\'', "CORNER_TEXT", Function.identity(), Function
+						.identity() });
 
 			final GenericTable table = openTable(tableSource, tableIO);
 			assertTableEquals(colHeaders, rowHeaders, content, table);
 
-			setValues(tableIO, new String[] { "separator" }, new Object[] { "," });
+			setValues(tableIO, new String[] { "separator" }, new Object[] { ',' });
 			assertEquals(expected, saveTable(table, tableIO));
 		}
 		catch (final Exception exc) {
@@ -168,10 +166,9 @@ public class DefaultTableIOPluginTest {
 			final Function<Double, String> formatter = val -> String.format("%.3f",
 				val);
 			setValues(tableIO, new String[] { "readColHeaders", "writeColHeaders",
-				"readRowHeaders", "writeRowHeaders", "separator", "eol", "skipEmpty",
-				"quote", "cornerText", "parser", "formatter" }, new Object[] { false,
-					true, true, true, ",", "\n", true, "'", "CORNER TEXT", parser,
-					formatter });
+				"readRowHeaders", "writeRowHeaders", "separator", "eol", "quote",
+				"cornerText", "parser", "formatter" }, new Object[] { false, true, true,
+					true, ",", "\n", "'", "CORNER TEXT", parser, formatter });
 			table = openTable(makeTableSource(singleRow, ",", "\n"), tableIO);
 			assertTableEquals(emptyHeader, singleRowHeader, content, table);
 			expected = "Row Header,3.142\n";
