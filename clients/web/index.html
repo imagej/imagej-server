@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Imagej-Server</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+<script src="client.js"></script>
+</head>
+<body>
+    <div class="top-level">
+        <select id="modules">
+            <option disabled selected style="display: none"></option>
+        </select>
+        <form id="module" style="display: none">
+            <fieldset>
+                <legend></legend>
+                <dl>
+                    <dt>Inputs</dt>
+                    <dd id="inputs"></dd>
+                    <dt>Outputs</dt>
+                    <dd id="outputs"></dd>
+                </dl>
+                <input type="submit" value="Execute">
+            </fieldset>
+        </form>
+    </div>
+</body>
+</html>

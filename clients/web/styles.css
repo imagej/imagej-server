@@ -1,0 +1,47 @@
+#modules{
+	width: 100%;
+	overflow: auto;
+}
+
+#module{
+	width: 100%;
+	overflow: auto;
+	font-family: monospace;
+}
+
+.required{
+	font-weight: 900;
+}
+
+.optional{
+	font-weight: 100;
+}
+
+.input{
+	color: #d3d3d3;
+}
+
+.input_div{
+	padding-bottom: 10px;
+}
+
+.active{
+	color: #000
+}
+
+input{
+	color: inherit;
+}
+
+input[type="number"]{
+	width: 4em;
+}
+
+input[type="range"]{
+	width: 100px;
+	vertical-align: bottom;
+}
+
+textarea{
+	vertical-align: top;
+}
