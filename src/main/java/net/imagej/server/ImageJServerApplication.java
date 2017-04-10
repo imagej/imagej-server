@@ -25,6 +25,11 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
+import java.util.EnumSet;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
+
 import net.imagej.server.health.ImageJServerHealthCheck;
 import net.imagej.server.resources.AdminResource;
 import net.imagej.server.resources.ModulesResource;
@@ -34,6 +39,7 @@ import net.imagej.server.services.DefaultObjectService;
 import net.imagej.server.services.JsonService;
 import net.imagej.server.services.ObjectService;
 
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.scijava.Context;
@@ -75,6 +81,20 @@ public class ImageJServerApplication extends
 	public void run(final ImageJServerConfiguration configuration,
 		final Environment environment)
 	{
+		// Enable CORS headers
+		final FilterRegistration.Dynamic cors = environment.servlets().addFilter(
+			"CORS", CrossOriginFilter.class);
+
+		// Configure CORS parameters
+		cors.setInitParameter("allowedOrigins", "*");
+		cors.setInitParameter("allowedHeaders",
+			"X-Requested-With,Content-Type,Accept,Origin");
+		cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
+
+		// Add URL mapping
+		cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true,
+			"/*");
+
 		env = environment;
 
 		// NB: not implemented yet
@@ -84,7 +104,7 @@ public class ImageJServerApplication extends
 		environment.jersey().register(MultiPartFeature.class);
 
 		// -- resources --
-		
+
 		environment.jersey().register(AdminResource.class);
 
 		environment.jersey().register(ModulesResource.class);
