@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
@@ -105,14 +106,6 @@ public class Mixins {
 		public abstract String getIdentifier();
 
 		@Override
-		@JsonProperty
-		public abstract String getName();
-
-		@Override
-		@JsonProperty
-		public abstract String getLabel();
-
-		@Override
 		@JsonProperty("inputs")
 		public abstract List<ModuleItem<?>> inputs();
 
@@ -135,7 +128,54 @@ public class Mixins {
 
 		@Override
 		@JsonProperty
+		public abstract boolean isRequired();
+
+		@Override
+		@JsonProperty
+		public abstract Type getGenericType();
+
+		@Override
+		@JsonProperty
+		public abstract String getWidgetStyle();
+
+		@Override
+		@JsonProperty
+		public abstract T getDefaultValue();
+
+		@Override
+		@JsonProperty
+		public abstract T getMinimumValue();
+
+		@Override
+		@JsonProperty
+		public abstract T getMaximumValue();
+
+		@Override
+		@JsonProperty
+		public abstract T getSoftMinimum();
+
+		@Override
+		@JsonProperty
+		public abstract T getSoftMaximum();
+
+		@Override
+		@JsonProperty
+		public abstract Number getStepSize();
+
+		@Override
+		@JsonProperty
+		public abstract int getColumnCount();
+
+		@Override
+		@JsonProperty
 		public abstract List<T> getChoices();
+	}
+
+	protected static abstract class TypeMixIn implements Type {
+
+		@JsonValue
+		@Override
+		public abstract String toString();
 	}
 
 	public static void registerMixIns(final ObjectMapper mapper) {
@@ -144,5 +184,6 @@ public class Mixins {
 		mapper.addMixIn(IntegerType.class, IntegerTypeMixIn.class);
 		mapper.addMixIn(ModuleInfo.class, ModuleInfoMixIn.class);
 		mapper.addMixIn(ModuleItem.class, ModuleItemMixIn.class);
+		mapper.addMixIn(Type.class, TypeMixIn.class);
 	}
 }
