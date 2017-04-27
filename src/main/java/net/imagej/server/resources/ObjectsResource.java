@@ -148,9 +148,10 @@ public class ObjectsResource {
 	/**
 	 * Reads the user-uploaded file into the imagej runtime. Currently only
 	 * support images and tables in text. An ID representing the data is returned.
-	 * <br/>
+	 * <p> 
 	 * If no hint for format is provided, filename would be used to guess the file
 	 * format.
+	 * </p>
 	 *
 	 * @param fileInputStream file stream of the uploaded file
 	 * @param fileDetail "Content-Disposition" header

@@ -32,11 +32,13 @@ import org.scijava.ui.UIService;
 
 /**
  * Handles the {@code --server} argument to run server in
- * {@link ServerService}.</br>
- * </br>
- * Optional parameters include:
+ * {@link ServerService}.
+ * 
+ * <p>Optional parameters include:</p>
+ * <ul>
  * <li>{@code -no-headless}: Run server with UI.</li>
  * <li>{@code -no-blocking}: Run server without blocking the main thread.</li>
+ * </ul>
  *
  * @author Leon Yang
  */
