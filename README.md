@@ -5,10 +5,6 @@
 
 This is a RESTful image server backed by ImageJ.
 
-It is currently only a prototype! Testing needed!
-
-# Purpose
-
 To provide easy-to-use and highly reusable image processing functionalities is
 a [central goal of ImageJ](https://imagej.net/Ops). As a result, the components
 of ImageJ are [modular](https://imagej.net/Architecture#Modularity), to
@@ -20,6 +16,8 @@ universal interfacing layer.
 See the [Rationale](https://github.com/imagej/imagej-server/wiki/Rationale)
 page of this repository's wiki for a longer discussion of cross-language
 integration and interoperability.
+
+This is currently only a prototype! Testing needed!
 
 ## Launching
 
