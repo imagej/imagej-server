@@ -4,25 +4,41 @@
 <title>Imagej-Server</title>
 <link rel="stylesheet" href="styles.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
-<script src="client.js"></script>
 </head>
 <body>
-    <div class="top-level">
-        <select id="modules">
-            <option disabled selected style="display: none"></option>
-        </select>
-        <form id="module" style="display: none">
-            <fieldset>
-                <legend></legend>
-                <dl>
-                    <dt>Inputs</dt>
-                    <dd id="inputs"></dd>
-                    <dt>Outputs</dt>
-                    <dd id="outputs"></dd>
-                </dl>
-                <input type="submit" value="Execute">
-            </fieldset>
-        </form>
+    <div id="top-level">
+        <div id="function-panel">
+            <select id="modules">
+                <option disabled selected style="display: none"></option>
+            </select>
+            <form id="module" style="display: none">
+                <fieldset>
+                    <legend></legend>
+                    <div style="float: right;">
+                        <label><input type="checkbox" id="use-json">use
+                            json</label>
+                    </div>
+                    <dl>
+                        <dt>Inputs</dt>
+                        <dd id="inputs"></dd>
+                        <dt>Outputs</dt>
+                        <dd id="outputs"></dd>
+                    </dl>
+                    <input type="submit" value="Execute">
+                </fieldset>
+            </form>
+        </div>
+        <div id="objs-panel">
+            <div id="objs-panel-buttons">
+                <input id="objs-panel-file" type="file">
+                <button id="objs-panel-upload">Upload</button>
+                <button id="objs-panel-refresh">Refresh</button>
+            </div>
+            <div id="objs-panel-frame">
+                <span id="default-objs-msg">No objects exist yet.</span>
+            </div>
+        </div>
     </div>
 </body>
+<script src="client.js"></script>
 </html>
