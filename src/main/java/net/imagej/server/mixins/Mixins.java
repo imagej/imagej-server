@@ -31,6 +31,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
+import net.imglib2.outofbounds.OutOfBoundsFactory;
 import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
@@ -178,6 +179,15 @@ public class Mixins {
 		public abstract String toString();
 	}
 
+	protected static abstract class OutOfBoundsFactoryMixIn<T, F> implements
+		OutOfBoundsFactory<T, F>
+	{
+
+		@JsonValue
+		@Override
+		public abstract String toString();
+	}
+
 	public static void registerMixIns(final ObjectMapper mapper) {
 		mapper.addMixIn(ComplexType.class, ToStringMixIn.class);
 		mapper.addMixIn(RealType.class, RealTypeMixIn.class);
@@ -185,5 +195,6 @@ public class Mixins {
 		mapper.addMixIn(ModuleInfo.class, ModuleInfoMixIn.class);
 		mapper.addMixIn(ModuleItem.class, ModuleItemMixIn.class);
 		mapper.addMixIn(Type.class, TypeMixIn.class);
+		mapper.addMixIn(OutOfBoundsFactory.class, OutOfBoundsFactoryMixIn.class);
 	}
 }

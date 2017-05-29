@@ -1,0 +1,100 @@
+#top-level{
+	display: flex;
+}
+
+#modules{
+	width: 100%;
+	overflow: auto;
+}
+
+#module{
+	width: 100%;
+	overflow: auto;
+	font-family: monospace;
+}
+
+.required{
+	font-weight: 900;
+}
+
+.optional{
+	font-weight: 100;
+}
+
+.input{
+	color: #d3d3d3;
+}
+
+.input_div{
+	padding-bottom: 10px;
+}
+
+input{
+	color: inherit;
+}
+
+input[type="number"]{
+	width: 4em;
+}
+
+input[type="range"]{
+	width: 100px;
+	vertical-align: bottom;
+}
+
+textarea{
+	vertical-align: top;
+}
+
+.dropbox{
+    border-style: dashed;
+    border-width: 1px;
+    display: inline-block;
+}
+
+#function-panel{
+    flex-grow: 1;
+    flex-basis: 50%;
+    margin: 8px 8px 8px 8px;
+}
+
+#objs-panel{
+	overflow: hidden;
+    flex-grow: 1;
+    flex-basis: 50%;
+    margin: 8px 8px 8px 8px;
+}
+
+#default-objs-msg{
+	color: #aaaaaa;
+	user-select: none;
+	margin: 8px 8px 8px 8px;
+}
+
+#objs-panel-buttons{
+	margin-bottom: 8px;
+}
+
+#objs-panel-frame{
+	display: flex;
+	flex-wrap: wrap;
+    border-style: dashed;
+    border-width: 1px;
+    height: 400px;
+    overflow: auto;
+}
+
+.img-box{
+	height: 100px;
+	width: 100px;
+	margin: 2px 2px 2px 2px;
+}
+
+.thumbnail{
+	max-height: 100px;
+	max-width: 100px;
+}
+
+.json-input{
+	display: none;
+}
