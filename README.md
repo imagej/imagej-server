@@ -24,7 +24,7 @@ This is currently only a prototype! Testing needed!
 To start the server from the CLI, use:
 
 ```
-mvn exec:java -Dexec.mainClass="net.imagej.server.Main"
+mvn -Pexec
 ```
 
 Or from an IDE, execute the class `net.imagej.server.Main`.
