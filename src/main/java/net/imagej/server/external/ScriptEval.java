@@ -21,26 +21,24 @@
 
 package net.imagej.server.external;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import net.imagej.ops.Ops;
-import net.imagej.ops.special.function.AbstractBinaryFunctionOp;
-
+import org.scijava.ItemIO;
+import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.script.ScriptService;
 
 /**
- * Op that Evaluate arbitrary scripts.
+ * Command that evaluates arbitrary scripts.
  * 
  * @author Leon Yang
+ * @author Curtis Rueden
  */
-@Plugin(type = Ops.Eval.class)
-public class ScriptEval extends
-	AbstractBinaryFunctionOp<String, Map<String, Object>, Map<String, Object>>
-	implements Ops.Eval
-{
+@Plugin(type = Command.class)
+public class ScriptEval implements Command {
 
 	@Parameter
 	private ScriptService scriptService;
@@ -48,27 +46,29 @@ public class ScriptEval extends
 	@Parameter
 	private String language;
 
+	@Parameter
+	private String script;
+
+	@Parameter(required = false)
+	private Map<String, Object> args;
+
 	@Parameter(required = false)
 	private boolean process = true;
 
-	// HACKs
-	private String fakePath;
+	@Parameter(type = ItemIO.OUTPUT)
+	private Map<String, Object> outputs;
 
 	@Override
-	public void initialize() {
-		fakePath = "foo." + scriptService.getLanguageByName(language)
-			.getExtensions().get(0);
-	}
-
-	@Override
-	public Map<String, Object> calculate(String input1,
-		Map<String, Object> input2)
-	{
+	public void run() {
+		final String fakePath = "script." + //
+			scriptService.getLanguageByName(language).getExtensions().get(0);
 		try {
-			return scriptService.run(fakePath, input1, process, input2).get()
+			final Map<String, Object> safeArgs = //
+				args == null ? Collections.emptyMap() : args;
+			outputs = scriptService.run(fakePath, script, process, safeArgs).get()
 				.getOutputs();
 		}
-		catch (InterruptedException | ExecutionException exc) {
+		catch (final InterruptedException | ExecutionException exc) {
 			throw new IllegalArgumentException(exc);
 		}
 	}

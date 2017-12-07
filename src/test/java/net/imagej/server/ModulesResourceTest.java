@@ -21,7 +21,6 @@
 
 package net.imagej.server;
 
-import static io.dropwizard.testing.FixtureHelpers.fixture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -116,11 +115,16 @@ public class ModulesResourceTest extends AbstractResourceTest {
 		// create random Img using ScriptEval
 		{
 			final String id = "command:net.imagej.server.external.ScriptEval";
-			final String createImg = fixture("fixtures/script/createImg.py");
+			final String createImg = "" + //
+				"#@ float[] arr\n" + //
+				"#@ long[] dims\n" + //
+				"#@output Img out\n" + //
+				"from net.imglib2.img.array import ArrayImgs\n" + //
+				"out = ArrayImgs.floats(list(arr), list(dims))\n";
 
 			final HashMap<String, Object> inputs = new HashMap<>();
 			inputs.put("language", "python");
-			inputs.put("in1", createImg);
+			inputs.put("script", createImg);
 
 			final HashMap<String, Object> scriptInputs = new HashMap<>();
 			// generate content of random Img
@@ -133,13 +137,13 @@ public class ModulesResourceTest extends AbstractResourceTest {
 			img = ArrayImgs.floats(array, 10, 10);
 			scriptInputs.put("arr", array);
 			scriptInputs.put("dims", new long[] { 10, 10 });
-			inputs.put("in2", scriptInputs);
+			inputs.put("args", scriptInputs);
 
 			final String result = runModule(id, inputs);
 
-			// expect JSON output: {"out":{"out":"IMG_ID"}}
+			// expect JSON output: {"outputs":{"out":"IMG_ID"}}
 			final Matcher matcher = Pattern.compile(
-				"\\{\"out\":\\{\"out\":\"([^\"]+)\"\\}\\}").matcher(result);
+				"\\{\"outputs\":\\{\"out\":\"([^\"]+)\"\\}\\}").matcher(result);
 			assertTrue(matcher.find());
 			imgId = matcher.group(1);
 		}
