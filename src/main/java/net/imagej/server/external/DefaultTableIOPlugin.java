@@ -50,7 +50,7 @@ import org.scijava.util.FileUtils;
  * 
  * @author Leon Yang
  */
-@Plugin(type = IOPlugin.class, priority = Priority.LOW_PRIORITY)
+@Plugin(type = IOPlugin.class, priority = Priority.LOW)
 public class DefaultTableIOPlugin extends AbstractIOPlugin<GenericTable> {
 
 	@Parameter

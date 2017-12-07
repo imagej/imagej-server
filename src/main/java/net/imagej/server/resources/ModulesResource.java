@@ -168,8 +168,7 @@ public class ModulesResource {
 	// -- Helper classes --
 
 	// HACK: Initialize op when run as module
-	@Plugin(type = PreprocessorPlugin.class, priority = Priority.HIGH_PRIORITY -
-		1)
+	@Plugin(type = PreprocessorPlugin.class, priority = Priority.HIGH - 1)
 	public static class InitializablePreprocessor extends
 		AbstractPreprocessorPlugin
 	{

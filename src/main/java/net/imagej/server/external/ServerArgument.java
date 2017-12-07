@@ -77,7 +77,7 @@ public class ServerArgument extends AbstractConsoleArgument {
 		}
 		else {
 			// server run headlessly by default
-			uiService.setHeadless(!params.contains(!noHeadless));
+			uiService.setHeadless(!noHeadless);
 		}
 
 		if (!noBlocking && !args.isEmpty()) {
