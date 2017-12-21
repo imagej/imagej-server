@@ -1,0 +1,19 @@
+<div dropdown class="btn-group" *ngFor="let topMenuItem of retrievedMenuRoot?.children">
+  <button dropdownToggle type="button" class="btn btn-primary dropdown-toggle">
+    {{topMenuItem.label}}<span class="caret"></span>
+  </button>
+  <ul *dropdownMenu class="dropdown-menu">
+    <ng-template ngFor let-menuItem [ngForOf]="topMenuItem?.children">
+      <app-component-menu-item [menuItem]="menuItem"></app-component-menu-item>
+    </ng-template>
+  </ul>
+</div>
+<br><br>
+<div>List of uploaded objects</div>
+<div *ngFor="let object of uploadedObjects">
+  <div [ngClass]="'objectImgWrap'">
+    <img [ngClass]="(object == activeObject) ? 'objectImg redBorder' : 'objectImg'" [src]="object.src" (click)="setObjectActive(object)" />
+  </div>
+</div>
+<input #fileInput type="file"><button type="button" (click)="uploadImage()">Upload</button>
+<br><br>

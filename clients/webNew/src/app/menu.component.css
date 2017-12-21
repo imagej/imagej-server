@@ -1,0 +1,4 @@
+.objectImg { width: auto; max-height: 100%; overflow: hidden; border: 3px solid gray;}
+.objectImgWrap { height: 200px; width: 200px; overflow: hidden; padding: 5px;}
+
+.redBorder { border: 3px solid red; }

@@ -1,0 +1,44 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">{{header}}</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<form (ngSubmit)="confirm()">
+  <div class="modal-body" *ngFor="let cr of componentRequests">
+    <div [ngSwitch]="cr.requestType">
+      <div *ngSwitchCase="'SimpleInputRequest'">
+          <span class="label">{{cr.label}}:</span>
+          <input type="text" [name]="cr.name" [disabled]="cr.disabled" [(ngModel)]="cr.value">
+      </div>
+      <div *ngSwitchCase="'DropdownSelectionRequest'"><span class="label">{{cr.label}}:</span>
+        <select [name]="cr.name" [(ngModel)]="cr.value">
+          <option *ngFor="let c of cr.choices" [ngValue]="c">{{c}}</option>
+        </select>
+      </div>
+      <div *ngSwitchCase="'SpinnerSelectionRequest'"><span class="label">{{cr.label}}:</span>
+        <input type="number" [name]="cr.name" [min]="cr.minimumValue" [max]="cr.maximumValue" [step]="cr.stepSize" [(ngModel)]="cr.value">
+      </div>
+      <div *ngSwitchCase="'ThumbnailDisplayRequest'"><span class="label">{{cr.label}}:</span>
+        <div class="thumbnailImageWrapper">
+          <img class="thumbnailImage" [src]="cr.imageSrc">
+        </div>
+      </div>
+      <div *ngSwitchCase="'StaticTextRequest'">
+        {{cr.text}}
+      </div>
+      <div *ngSwitchCase="'CheckboxSelectionRequest'">
+        <span class="label">{{cr.label}}:</span>
+        <input type="checkbox" [name]="cr.name" [(ngModel)]="cr.value">
+      </div>
+      <div *ngSwitchCase="'FileInputRequest'">
+        <span class="label">{{cr.label}}:</span>
+        <input type="file" [name]="cr.name" [attr.name]="cr.name" (change)="setFileAsValue($event)">
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="cancel()">Cancel</button>
+    <button type="submit" class="btn btn-primary">Confirm</button>
+  </div>
+</form>
