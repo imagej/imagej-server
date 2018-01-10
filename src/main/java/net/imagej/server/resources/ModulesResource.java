@@ -25,9 +25,11 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -43,18 +45,24 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import net.imagej.ops.Initializable;
+import net.imagej.server.WebCommandInfo;
 import net.imagej.server.services.JsonService;
 
 import org.scijava.Context;
 import org.scijava.Identifiable;
 import org.scijava.Priority;
+import org.scijava.command.CommandInfo;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleService;
 import org.scijava.module.process.AbstractPreprocessorPlugin;
+import org.scijava.module.process.ModulePreprocessor;
 import org.scijava.module.process.PreprocessorPlugin;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.plugin.PluginInfo;
+import org.scijava.plugin.PluginService;
+import org.scijava.widget.InputHarvester;
 
 /**
  * Server resource that manages module operations.
@@ -68,6 +76,9 @@ public class ModulesResource {
 
 	@Parameter
 	private ModuleService moduleService;
+
+	@Parameter
+	private PluginService pluginService;
 
 	@Inject
 	private JsonService jsonService;
@@ -121,7 +132,38 @@ public class ModulesResource {
 			final String msg = String.format("Module %s does not exist", id);
 			throw new WebApplicationException(msg, Status.NOT_FOUND);
 		}
-		return jsonService.parseObject(info);
+
+		// Check if we're dealing with Command information
+		if (!(info instanceof CommandInfo)) {
+			// TODO - decide what to do if this happens.
+			throw new IllegalArgumentException("Object is not an instance of " + CommandInfo.class.getName());
+		}
+
+		// Create a transient instance of the module, so we can do some
+		// selective preprocessing. This is necessary to determine which
+		// inputs are still unresolved at the time of user input harvesting,
+		// as well as what their current starting values are.
+		final Module module = moduleService.createModule(info);
+
+		// Get the complete list of preprocessors.
+		final List<PluginInfo<PreprocessorPlugin>> allPPs =
+			pluginService.getPluginsOfType(PreprocessorPlugin.class);
+
+		// Filter the list to only those which run _before_ input harvesting.
+		final List<PluginInfo<PreprocessorPlugin>> goodPPs = allPPs.stream() //
+			.filter(ppInfo -> ppInfo.getPriority() > InputHarvester.PRIORITY) //
+			.collect(Collectors.toList());
+
+		// Execute all of these "good" preprocessors to prep the module correctly.
+		for (final ModulePreprocessor p : pluginService.createInstances(goodPPs)) {
+			p.process(module);
+			if (p.isCanceled()) {
+				// TODO - decide what to do if this happens.
+			}
+		}
+
+		// Create a WebCommandInfo instance and parse it (resolved inputs will be identified during the process)
+		return jsonService.parseObject(new WebCommandInfo((CommandInfo)info, module));
 	}
 
 	/**
