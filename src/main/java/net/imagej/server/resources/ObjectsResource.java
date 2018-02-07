@@ -23,6 +23,7 @@ package net.imagej.server.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import io.scif.config.SCIFIOConfig;
@@ -54,6 +55,8 @@ import javax.ws.rs.core.UriInfo;
 
 import net.imagej.Dataset;
 import net.imagej.DatasetService;
+import net.imagej.display.DatasetView;
+import net.imagej.display.ImageDisplayService;
 import net.imagej.server.Utils;
 import net.imagej.server.services.ObjectInfo;
 import net.imagej.server.services.ObjectService;
@@ -80,6 +83,9 @@ public class ObjectsResource {
 
 	@Parameter
 	private DatasetIOService datasetIOService;
+	
+	@Parameter
+	private ImageDisplayService imageDisplayService;
 
 	@Parameter
 	private LocationService locationService;
@@ -189,14 +195,26 @@ public class ObjectsResource {
 			type = mt.substring(0, mt.indexOf('/'));
 		}
 
-		final Object obj;
+		final ArrayNode arrayNode = factory.arrayNode();
 		try {
+			final String createdByString = "uploadFile:filename=" + fileDetail.getFileName();
 			switch (type) {
-				case "image":
-					obj = datasetIOService.open(filename);
+				case "image":					
+					// Create a Dataset based on the selected file
+					final Dataset dataset = datasetIOService.open(filename);
+					final String datasetId = objectService.register(dataset, createdByString);
+					arrayNode.add(factory.objectNode().set("id", factory.textNode(datasetId)));					
+					// Create a DatasetView based on the just created Dataset
+					final DatasetView datasetView = (DatasetView) imageDisplayService.createDataView(dataset);
+					datasetView.rebuild(); // Force re-initialization
+					final String datasetViewId = objectService.register(datasetView, createdByString);
+					arrayNode.add(factory.objectNode().set("id", factory.textNode(datasetViewId)));					
 					break;
 				case "text":
-					obj = ioService.open(filename);
+					// Create an Object based on the selected file
+					Object obj = ioService.open(filename);
+					final String id = objectService.register(obj, createdByString);
+					arrayNode.add(factory.objectNode().set("id", factory.textNode(id)));
 					break;
 				default:
 					throw new WebApplicationException("Unrecognized format",
@@ -212,10 +230,8 @@ public class ObjectsResource {
 		finally {
 			locationService.getIdMap().remove(filename, bah);
 		}
-
-		final String id = objectService.register(obj, "uploadFile:filename=" +
-			fileDetail.getFileName());
-		return factory.objectNode().set("id", factory.textNode(id));
+		
+		return arrayNode;
 	}
 
 	/**
@@ -245,7 +261,13 @@ public class ObjectsResource {
 
 		try {
 			final Object obj = objectService.find(id).getObject();
-			if (obj instanceof Img) {
+			if (obj instanceof DatasetView) {
+				// TODO: Should we make use of other DatasetView parameters?
+				final Dataset ds = ((DatasetView) obj).getData();
+				// TODO: inject query parameters into config
+				final SCIFIOConfig config = new SCIFIOConfig();
+				datasetIOService.save(ds, filename, config);
+			} else if (obj instanceof Img) {
 				final Dataset ds;
 				if (obj instanceof Dataset) {
 					ds = (Dataset) obj;
