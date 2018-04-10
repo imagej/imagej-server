@@ -31,9 +31,9 @@ Or from an IDE, execute the class `net.imagej.server.Main`.
 
 ## Usage
 
-### [Python Client](clients/python)
+### Python Client
 
-Uses a Python wrapper for the web API. Clients for more languages are coming.
+The [imagej.py](https://github.com/imagej/imagej.py) module includes a Python wrapper for the web API.
 
 ### [Postman Collection](clients/postman)
 
