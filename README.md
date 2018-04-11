@@ -39,6 +39,18 @@ The [imagej.py](https://github.com/imagej/imagej.py) module includes a Python wr
 
 A collection of sample API calls to imagej-server using [Postman](https://www.getpostman.com/).
 
+### Web client with GUI
+
+Installation
+
+- Check that you have got *Node.js* and *npm* installed ([instructions](https://www.npmjs.com/get-npm)).
+- Open a command prompt, navigate to `clients\webNew` and run `npm install`. This will install all required *Node.js* packages.
+
+Compilation and execution (development)
+
+- Open a command prompt, navigate to `clients\webNew` and run `npm start`.
+- Open a web browser and navigate to `localhost:4200`.
+
 ### APIs
 
 - __GET__ /modules
