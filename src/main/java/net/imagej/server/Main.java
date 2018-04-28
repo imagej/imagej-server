@@ -35,7 +35,7 @@ public class Main {
 		ij.ui().setHeadless(true);
 		final String[] arguments = args == null || args.length == 0 ? new String[] {
 			"server", "imagej-server.yml" } : args;
-		final ImageJServerApplication app = new ImageJServerApplication(ij
+		final ImageJServer app = new ImageJServer(ij
 			.context());
 		app.run(arguments);
 		app.join();

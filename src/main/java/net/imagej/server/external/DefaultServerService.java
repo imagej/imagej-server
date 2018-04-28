@@ -21,7 +21,7 @@
 
 package net.imagej.server.external;
 
-import net.imagej.server.ImageJServerApplication;
+import net.imagej.server.ImageJServer;
 
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
@@ -37,12 +37,12 @@ public class DefaultServerService extends AbstractService implements
 	ServerService
 {
 
-	private ImageJServerApplication serverApp;
+	private ImageJServer serverApp;
 
 	@Override
 	public void launch(final boolean blocking) {
 		if (serverApp != null) return;
-		serverApp = new ImageJServerApplication(getContext());
+		serverApp = new ImageJServer(getContext());
 		try {
 			serverApp.run("server", "imagej-server.yml");
 			if (blocking) serverApp.join();
