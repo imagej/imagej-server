@@ -21,21 +21,20 @@
 
 package net.imagej.server;
 
-import net.imagej.ImageJ;
+import net.imagej.ImageJService;
 
 /**
- * Main class for imagej-server.
- * 
- * @author Leon Yang
+ * Service for ImageJ Server operations.
+ *
+ * @author Curtis Rueden
  */
-public class Main {
+public interface ImageJServerService extends ImageJService {
 
-	public static void main(String[] args) throws Exception {
-		final ImageJ ij = new ImageJ();
-		ij.ui().setHeadless(true);
-		final ImageJServer app = ij.get(ImageJServerService.class).start(args);
-		app.join();
-		ij.context().dispose();
-	}
-
+	/**
+	 * Launches an instance of the ImageJ Server.
+	 * 
+	 * @param args Arguments to pass to the server.
+	 * @throws RuntimeException if something goes wrong launching the server.
+	 */
+	ImageJServer start(String... args);
 }
