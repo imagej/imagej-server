@@ -29,6 +29,7 @@ import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.script.ScriptLanguage;
 import org.scijava.script.ScriptService;
 
 /**
@@ -60,8 +61,19 @@ public class ScriptEval implements Command {
 
 	@Override
 	public void run() {
-		final String fakePath = "script." + //
-			scriptService.getLanguageByName(language).getExtensions().get(0);
+		// Make an honest effort to figure out what language they mean. :-)
+		final String ext;
+		final ScriptLanguage langByExt = //
+			scriptService.getLanguageByExtension(language);
+		if (langByExt != null) ext = language;
+		else {
+			final ScriptLanguage langByName = scriptService.getLanguageByName(
+				language);
+			if (langByName != null) ext = langByName.getExtensions().get(0);
+			else throw new IllegalArgumentException("Unknown language: " + language);
+		}
+		final String fakePath = "script." + ext;
+
 		try {
 			final Map<String, Object> safeArgs = //
 				args == null ? Collections.emptyMap() : args;
