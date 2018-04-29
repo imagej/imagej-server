@@ -21,11 +21,18 @@
 
 package net.imagej.server;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.scijava.io.ByteArrayByteBank;
+import org.scijava.io.ByteBank;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.service.AbstractService;
 import org.scijava.service.Service;
+import org.scijava.util.FileUtils;
 
 /**
  * Default implementation of {@link ImageJServerService}.
@@ -40,10 +47,12 @@ public class DefaultImageJServerService extends AbstractService implements
 	@Parameter
 	private LogService log;
 
+	private String configFilePath;
+
 	@Override
 	public ImageJServer start(final String... args) {
 		final String[] arguments = args == null || args.length == 0 ? //
-			new String[] { "server", "imagej-server.yml" } : args;
+			new String[] { "server", configFilePath() } : args;
 		final ImageJServer app = new ImageJServer(context());
 		try {
 			app.run(arguments);
@@ -52,5 +61,41 @@ public class DefaultImageJServerService extends AbstractService implements
 			throw new RuntimeException(exc);
 		}
 		return app;
+	}
+
+	// -- Helper methods --
+
+	private String configFilePath() {
+		if (configFilePath == null) initConfigFilePath();
+		return configFilePath;
+	}
+
+	private synchronized void initConfigFilePath() {
+		if (configFilePath != null) return;
+
+		try {
+			final InputStream in = getClass().getResourceAsStream("imagej-server.yml");
+			final byte[] bytes = readStreamFully(in);
+
+			final File configFile = File.createTempFile("imagej-server", ".yml");
+			FileUtils.writeFile(configFile, bytes);
+			configFile.deleteOnExit();
+			configFilePath = configFile.getAbsolutePath();
+		}
+		catch (final IOException exc) {
+			log.error(exc);
+		}
+	}
+
+	// TODO: Move this to SciJava Common.
+	private byte[] readStreamFully(final InputStream in) throws IOException {
+		final ByteBank bank = new ByteArrayByteBank();
+		byte[] buf = new byte[256 * 1024];
+		while (true) {
+			final int r = in.read(buf);
+			if (r <= 0) break;
+			bank.appendBytes(buf, r);
+		}
+		return bank.toByteArray();
 	}
 }
