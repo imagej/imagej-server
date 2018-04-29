@@ -28,9 +28,12 @@ import net.imagej.server.ImageJServerService;
 
 import org.scijava.console.AbstractConsoleArgument;
 import org.scijava.console.ConsoleArgument;
+import org.scijava.log.LogService;
 import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.startup.StartupService;
+import org.scijava.ui.UIService;
 
 /**
  * Handles the {@code --server} argument to signal that an ImageJ Server
@@ -46,6 +49,15 @@ public class ServerArgument extends AbstractConsoleArgument {
 
 	@Parameter(required = false)
 	private ObjectService objectService;
+
+	@Parameter(required = false)
+	private UIService uiService;
+
+	@Parameter(required = false)
+	private StartupService startupService;
+
+	@Parameter(required = false)
+	private LogService log;
 
 	// -- Constructor --
 
@@ -63,7 +75,21 @@ public class ServerArgument extends AbstractConsoleArgument {
 
 		final ImageJServer server = imagejServerService.start();
 		objectService.addObject(server);
+
+		if (startupService != null) {
+			startupService.addOperation(() -> {
+				// In headless mode, block until server shuts down.
+				if (uiService == null || !uiService.isHeadless()) return;
+				try {
+					server.join();
+				}
+				catch (final InterruptedException exc) {
+					if (log != null) log.error(exc);
+				}
+			});
+		}
 	}
+
 	// -- Typed methods --
 
 	@Override

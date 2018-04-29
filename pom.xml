@@ -95,6 +95,7 @@ Wisconsin-Madison.</license.copyrightOwners>
 
 		<dropwizard.version>1.2.0</dropwizard.version>
 		<jersey-media-multipart.version>2.23.2</jersey-media-multipart.version>
+		<scijava-common.version>2.71.0</scijava-common.version>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
