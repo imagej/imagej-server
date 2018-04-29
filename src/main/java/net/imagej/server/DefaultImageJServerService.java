@@ -24,6 +24,8 @@ package net.imagej.server;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.scijava.io.ByteArrayByteBank;
 import org.scijava.io.ByteBank;
@@ -44,6 +46,14 @@ public class DefaultImageJServerService extends AbstractService implements
 	ImageJServerService
 {
 
+	/**
+	 * Collection of servers that have been doled out.
+	 * <p>
+	 * We keep these here so we can stop them all upon dispose.
+	 * </p>
+	 */
+	private Set<ImageJServer> servers = new HashSet<>();
+
 	@Parameter
 	private LogService log;
 
@@ -53,14 +63,33 @@ public class DefaultImageJServerService extends AbstractService implements
 	public ImageJServer start(final String... args) {
 		final String[] arguments = args == null || args.length == 0 ? //
 			new String[] { "server", configFilePath() } : args;
-		final ImageJServer app = new ImageJServer(context());
+		final ImageJServer app = new ImageJServer(context()) {
+			@Override
+			public void stop() throws Exception {
+				servers.remove(this);
+				super.stop();
+			}
+		};
 		try {
 			app.run(arguments);
 		}
 		catch (final Exception exc) {
 			throw new RuntimeException(exc);
 		}
+		servers.add(app);
 		return app;
+	}
+
+	@Override
+	public void dispose() {
+		for (final ImageJServer server : servers) {
+			try {
+				server.stop();
+			}
+			catch (final Exception exc) {
+				log.error(exc);
+			}
+		}
 	}
 
 	// -- Helper methods --
