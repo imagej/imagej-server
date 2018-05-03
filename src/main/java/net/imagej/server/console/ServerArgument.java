@@ -19,37 +19,45 @@
  * #L%
  */
 
-package net.imagej.server.external;
+package net.imagej.server.console;
 
-import java.util.HashSet;
 import java.util.LinkedList;
+
+import net.imagej.server.ImageJServer;
+import net.imagej.server.ImageJServerService;
 
 import org.scijava.console.AbstractConsoleArgument;
 import org.scijava.console.ConsoleArgument;
+import org.scijava.log.LogService;
+import org.scijava.object.ObjectService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.startup.StartupService;
 import org.scijava.ui.UIService;
 
 /**
- * Handles the {@code --server} argument to run server in
- * {@link ServerService}.
- * 
- * <p>Optional parameters include:</p>
- * <ul>
- * <li>{@code -no-headless}: Run server with UI.</li>
- * <li>{@code -no-blocking}: Run server without blocking the main thread.</li>
- * </ul>
+ * Handles the {@code --server} argument to signal that an ImageJ Server
+ * should be started immediately when ImageJ launches.
  *
- * @author Leon Yang
+ * @author Curtis Rueden
  */
 @Plugin(type = ConsoleArgument.class)
 public class ServerArgument extends AbstractConsoleArgument {
 
 	@Parameter(required = false)
+	private ImageJServerService imagejServerService;
+
+	@Parameter(required = false)
+	private ObjectService objectService;
+
+	@Parameter(required = false)
 	private UIService uiService;
 
 	@Parameter(required = false)
-	private ServerService serverService;
+	private StartupService startupService;
+
+	@Parameter(required = false)
+	private LogService log;
 
 	// -- Constructor --
 
@@ -63,36 +71,30 @@ public class ServerArgument extends AbstractConsoleArgument {
 	public void handle(final LinkedList<String> args) {
 		if (!supports(args)) return;
 
-		args.removeFirst();
+		args.removeFirst(); // --server
 
-		final HashSet<String> params = new HashSet<>();
-		while (getParam(args) != null) {
-			params.add(args.removeFirst());
-		}
-		final boolean noHeadless = params.contains("-no-headless");
-		final boolean noBlocking = params.contains("-no-blocking");
+		final ImageJServer server = imagejServerService.start();
+		objectService.addObject(server);
 
-		if (uiService == null) {
-			log().warn("UIService unavailable");
+		if (startupService != null) {
+			startupService.addOperation(() -> {
+				// In headless mode, block until server shuts down.
+				if (uiService == null || !uiService.isHeadless()) return;
+				try {
+					server.join();
+				}
+				catch (final InterruptedException exc) {
+					if (log != null) log.error(exc);
+				}
+			});
 		}
-		else {
-			// server run headlessly by default
-			uiService.setHeadless(!noHeadless);
-		}
-
-		if (!noBlocking && !args.isEmpty()) {
-			log().warn("Arguments after --server will be blocked");
-		}
-
-		// server blocks by default
-		serverService.launch(!noBlocking);
 	}
 
 	// -- Typed methods --
 
 	@Override
 	public boolean supports(final LinkedList<String> args) {
-		return serverService != null && super.supports(args);
+		return imagejServerService != null && objectService != null &&
+			super.supports(args);
 	}
-
 }

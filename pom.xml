@@ -11,7 +11,7 @@
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-server</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.1-SNAPSHOT</version>
 
 	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
@@ -95,6 +95,7 @@ Wisconsin-Madison.</license.copyrightOwners>
 
 		<dropwizard.version>1.2.0</dropwizard.version>
 		<jersey-media-multipart.version>2.23.2</jersey-media-multipart.version>
+		<scijava-common.version>2.71.1</scijava-common.version>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>

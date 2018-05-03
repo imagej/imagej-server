@@ -19,26 +19,22 @@
  * #L%
  */
 
-package net.imagej.server.external;
+package net.imagej.server;
 
 import net.imagej.ImageJService;
 
 /**
- * Interface for service that work with servers.
- * 
- * @author Leon Yang
+ * Service for ImageJ Server operations.
+ *
+ * @author Curtis Rueden
  */
-public interface ServerService extends ImageJService {
+public interface ImageJServerService extends ImageJService {
 
 	/**
-	 * Launch the server.
+	 * Launches an instance of the ImageJ Server.
 	 * 
-	 * @param blocking if true, method will not return until server is stopped.
+	 * @param args Arguments to pass to the server.
+	 * @throws RuntimeException if something goes wrong launching the server.
 	 */
-	void launch(final boolean blocking);
-
-	/**
-	 * Stops the server.
-	 */
-	void stop();
+	ImageJServer start(String... args);
 }
