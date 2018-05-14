@@ -58,7 +58,7 @@ public class ImageJServer extends
 	private final ObjectService objectService;
 
 	private final JsonService jsonService;
-
+	
 	private Environment env;
 
 	public ImageJServer(final Context ctx) {

@@ -1,0 +1,14 @@
+<div *ngIf="menuItem?.children.length === 0">
+  <li *ngIf="menuItem.label !== '-'"><span class="dropdown-item fake-hyperlink" (click)="updateListeners()">{{menuItem.label}}</span></li>
+  <li *ngIf="menuItem.label === '-'" class="divider dropdown-divider"></li>
+</div>
+<div *ngIf="menuItem?.children.length !== 0">
+  <li class="dropdown-submenu">
+    <span class="dropdown-toggle dropdown-item fake-hyperlink" data-toggle="dropdown">{{menuItem.label}}</span>
+    <ul class="dropdown-menu">
+      <ng-template ngFor let-menuItemChild [ngForOf]="menuItem?.children">
+        <app-component-menu-item [menuItem]="menuItemChild"></app-component-menu-item>
+      </ng-template>
+    </ul>
+  </li>
+</div>

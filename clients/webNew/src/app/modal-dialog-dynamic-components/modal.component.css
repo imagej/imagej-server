@@ -1,0 +1,8 @@
+.label {
+  width: 150px;
+  display: block;
+  float: left;
+}
+
+.thumbnailImage { width: auto; max-height: 100%; overflow: hidden; border: 1px solid gray;}
+.thumbnailImageWrapper { height: 100px; width: 100px; overflow: hidden; padding: 0px;}

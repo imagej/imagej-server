@@ -21,12 +21,12 @@
 
 package net.imagej.server.resources;
 
-import io.dropwizard.setup.Environment;
-
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+
+import io.dropwizard.setup.Environment;
 
 /**
  * Resource for administration.
@@ -35,9 +35,9 @@ import javax.ws.rs.core.Response;
  */
 @Path("/admin")
 public class AdminResource {
-
+	
 	@Inject
-	private Environment env;
+	private Environment env;	
 
 	/**
 	 * Stop the imagej-server.
