@@ -12,7 +12,8 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-devkit/schematics": "0.0.43",
+    "@angular-devkit/core": "^0.3.2",
+    "@angular-devkit/schematics": "^0.3.2",
     "@angular/animations": "^4.4.7",
     "@angular/common": "^4.4.7",
     "@angular/compiler": "^4.4.7",
@@ -22,10 +23,13 @@
     "@angular/platform-browser": "^4.4.7",
     "@angular/platform-browser-dynamic": "^4.4.7",
     "@angular/router": "^4.4.7",
+    "ajv": "^6.0.0",
     "bootstrap": "^4.1.1",
     "core-js": "^2.5.6",
+    "jquery": "^1.9.1",
     "ngx-bootstrap": "^2.0.5",
     "npm": "^5.10.0",
+    "popper.js": "^1.14.3",
     "rxjs": "^5.5.11",
     "zone.js": "^0.8.26"
   },
