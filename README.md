@@ -107,7 +107,7 @@ Compilation and execution (development)
 
 - __GET__ /objects/*{id}*/*{format}*?[&key=*{value}*]...
 
- Download an object in some specific format from the server. Optional uery parameters will be used for configuration depending on the type of the object.
+ Download an object in some specific format from the server. Optional query parameters will be used for configuration depending on the type of the object.
 
  `$ curl localhost:8080/objects/object:0123456789abcdef/png`
 
