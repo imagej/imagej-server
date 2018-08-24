@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { Subscription } from 'rxjs/Subscription';
 
 @Component({
 selector: 'app-root',

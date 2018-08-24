@@ -22,9 +22,7 @@ import { FileInputRequest } from '../modal-dialog-dynamic-components/file-input-
 
 import { ModalContentComponent } from '../modal-dialog-dynamic-components/modal.component';
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/Rx';
+import { Observable, EMPTY } from 'rxjs';
 
 @Injectable()
 export class ModuleService {
@@ -108,7 +106,7 @@ export class ModuleService {
         .flatMap(processedInputs => {
           return (processedInputs !== null) ?
             service.jsonService.postObject(`${this.modulesUrl}/${module.rawName}`, processedInputs) :
-            Observable.empty();
+            EMPTY;
         })
         .map(outputs => {
           // TODO: Handle outputs properly

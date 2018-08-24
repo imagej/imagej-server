@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { FijiObject } from '../fiji-object';
 import { FijiModule } from '../fiji-module';
 import { FijiMenuItem } from '../fiji-menu-item';
