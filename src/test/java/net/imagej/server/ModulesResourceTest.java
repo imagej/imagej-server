@@ -26,9 +26,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -99,7 +101,28 @@ public class ModulesResourceTest extends AbstractResourceTest {
 			try {
 				expected = jsonService.parseObject(ctx.getService(ModuleService.class)
 					.getModuleById(id));
-				assertEquals(expected, response);
+				if (!expected.equals(response)) {
+					System.out.println("Expected:" + expected);
+					System.out.println("Response:" + response);
+				}
+
+				// Convert JSON strings to Java collections, for easier interrogation.
+				final Map<?, ?> expectedMap = jsonToMap(expected);
+				final Map<?, ?> responseMap = jsonToMap(response);
+
+				// Check that extra information is present in actual response.
+				// Remove the extra fields, so that we can compare more easily.
+				final String[] extraFields = {"isResolved", "startingValue"};
+				for (final Object input : (Iterable<?>) responseMap.get("inputs")) {
+					final Map<?, ?> inputMap = (Map<?, ?>) input;
+					for (final String field : extraFields) {
+						assertTrue(inputMap.containsKey(field));
+						inputMap.remove(field);
+					}
+				}
+
+				// Assert JSON objects are now equal.
+				assertEquals(expectedMap, responseMap);
 			}
 			catch (JsonProcessingException exc) {
 				fail(exc.getMessage());
@@ -175,6 +198,15 @@ public class ModulesResourceTest extends AbstractResourceTest {
 	private String runModule(final String id, final Map<String, Object> inputs) {
 		return resources.client().target("/modules/" + id).request().post(Entity
 			.entity(inputs, MediaType.APPLICATION_JSON), String.class);
+	}
+
+	private static Map<?, ?> jsonToMap(final String json) {
+		try {
+			return new ObjectMapper().readValue(json, Map.class);
+		}
+		catch (final IOException exc) {
+			throw new IllegalArgumentException(exc);
+		}
 	}
 
 	// -- helper classes --
