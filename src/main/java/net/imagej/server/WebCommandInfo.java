@@ -18,6 +18,7 @@ public class WebCommandInfo extends CommandInfo {
 		relatedModule = module;
 	}
 
+	@Override
 	public Iterable<ModuleItem<?>> inputs() {
 
 		final List<WebCommandModuleItem<?>> checkedInputs = new ArrayList<>();
