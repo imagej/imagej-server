@@ -117,7 +117,7 @@ that invokes `net.imagej.server.Main.main(String[])`.
 
 ### Python Client
 
-The [imagej.py](https://github.com/imagej/imagej.py) module includes a Python wrapper for the web API.
+The [pyimagej](https://github.com/imagej/pyimagej) module includes a Python wrapper for the web API.
 
 ### [Postman Collection](clients/postman)
 
