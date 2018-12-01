@@ -21,13 +21,97 @@ This is currently only a prototype! Testing needed!
 
 ## Launching
 
-To start the server from the CLI, use:
+The server can run with a graphical display, or in
+[headless](https://imagej.net/Headless) mode.
 
+* With a graphical display, remote commands can affect the ImageJ graphical
+  user interface (GUI). E.g., images can be displayed to the user.
+* In headless mode, there is no GUI. E.g., in a cluster computing environment,
+  each node can have its own local ImageJ Server instance.
+
+There are several ways to invoke the server:
+
+<details><summary><b>If ImageJ is already running</b></summary>
+
+* Use _Plugins &#8250; Server &#8250; Start_
+  to make ImageJ start listening for remote commands.
+* Use _Plugins &#8250; Server &#8250; Stop_
+  to shut down the server. The local ImageJ will continue running.
+
+You must enable the Server [update site](https://imagej.net/Update_Sites) first.
+
+</details>
+<details><summary><b>Launch via jgo</b></summary>
+
+The [jgo](https://github.com/scijava/jgo) launcher makes it easy to launch the
+ImageJ Server. No need to explicitly clone the repository or download any JARs.
+
+After installing jgo, add the following stanza to your `~/.jgorc` file:
+```ini
+[repositories]
+imagej.public = https://maven.imagej.net/content/groups/public
+```
+
+Then invoke the server with a graphical display as follows:
+```
+jgo net.imagej:imagej-server
+```
+
+Or in headless mode:
+```
+jgo -Djava.awt.headless=true net.imagej:imagej-server
+```
+
+</details>
+<details><summary><b>Launch from CLI via Maven</b></summary>
+
+Clone this repository. Then start the server from the CLI _in headless mode_:
 ```
 mvn -Pexec
 ```
 
-Or from an IDE, execute the class `net.imagej.server.Main`.
+</details>
+<details><summary><b>Launch from IDE</b></summary>
+
+Clone this repository, import the project, then run the class
+`net.imagej.server.Main`. The server will launch _in headless mode_.
+
+</details>
+<details><summary><b>Launch via the ImageJ Launcher</b></summary>
+
+Enable the Server [update site](https://imagej.net/Update_Sites).
+
+Then launch ImageJ with a graphical display:
+```
+./ImageJ --server
+```
+
+Or in headless mode:
+```
+./ImageJ --server --headless
+```
+
+See also the [ImageJ Launcher](https://imagej.net/Launcher) documentation.
+
+</details>
+<details><summary><b>Including additional plugins</b></summary>
+
+If you want to make additional ImageJ plugins (e.g. plugins from
+[Fiji](https://github.com/fiji)) available remotely, you can include the
+additional components on the runtime classpath.
+
+One easy way is via the `jgo`-based launch mechanism with the `+` syntax.
+For example:
+
+```
+jgo sc.fiji:fiji+net.imagej:image-server
+```
+
+Another way is make your own Maven project depending on
+`net.imagej:imagej-server` and other things, with a `main` entry point
+that invokes `net.imagej.server.Main.main(String[])`.
+
+</details>
 
 ## Usage
 
