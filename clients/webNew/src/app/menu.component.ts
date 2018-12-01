@@ -5,7 +5,7 @@ import { ModuleService } from './services/module.service';
 import { MenuService } from './services/menu.service';
 import { NotificationService } from './services/notification.service';
 
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 
 import { FijiObject } from './fiji-object';
 import { FijiModule } from './fiji-module';

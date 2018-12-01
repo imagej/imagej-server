@@ -22,9 +22,8 @@ import { FileInputRequest } from '../modal-dialog-dynamic-components/file-input-
 
 import { ModalContentComponent } from '../modal-dialog-dynamic-components/modal.component';
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/Rx';
+import { Observable, EMPTY } from 'rxjs';
+import { mergeMap } from 'rxjs/operators';
 
 @Injectable()
 export class ModuleService {
@@ -105,15 +104,15 @@ export class ModuleService {
       this.bsModalRef.content.header = label;
       this.bsModalRef.content.componentRequests = componentRequests;
       return this.bsModalRef.content.onClose
-        .flatMap(processedInputs => {
-          return (processedInputs !== null) ?
+        .pipe(mergeMap((processedInputs: Object) => {
+          let postedObject: Observable<Object> = (processedInputs !== null) ?
             service.jsonService.postObject(`${this.modulesUrl}/${module.rawName}`, processedInputs) :
-            Observable.empty();
-        })
-        .map(outputs => {
-          // TODO: Handle outputs properly
-          if (outputs !== null && outputs.length === 1 && outputs['dataset'] === null) { outputs = null; }
-        });
+            EMPTY;
+          if (postedObject !== null && postedObject['dataset'] === null) {
+            postedObject = null;
+          }
+          return postedObject;
+        }));
     }
 
     // TODO: Not tested yet as all the tested modules needed some sort of inputs
