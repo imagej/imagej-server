@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>19.1.1</version>
+		<version>23.2.0</version>
 		<relativePath />
 	</parent>
 
@@ -95,7 +95,6 @@ Wisconsin-Madison.</license.copyrightOwners>
 
 		<dropwizard.version>1.2.0</dropwizard.version>
 		<jersey-media-multipart.version>2.23.2</jersey-media-multipart.version>
-		<scijava-common.version>2.71.1</scijava-common.version>
 
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
@@ -157,6 +156,10 @@ Wisconsin-Madison.</license.copyrightOwners>
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.scijava</groupId>
+			<artifactId>scijava-table</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.dropwizard</groupId>

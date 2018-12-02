@@ -34,13 +34,13 @@ import java.util.List;
 import java.util.function.Function;
 
 import net.imagej.server.external.DefaultTableIOPlugin;
-import net.imagej.table.GenericTable;
 
 import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.io.IOPlugin;
 import org.scijava.io.IOService;
 import org.scijava.plugin.Parameter;
+import org.scijava.table.GenericTable;
 import org.scijava.util.ClassUtils;
 
 /**

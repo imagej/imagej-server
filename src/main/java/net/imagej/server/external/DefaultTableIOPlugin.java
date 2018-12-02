@@ -35,14 +35,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import net.imagej.table.DefaultGenericTable;
-import net.imagej.table.GenericTable;
-
 import org.scijava.Priority;
 import org.scijava.io.AbstractIOPlugin;
 import org.scijava.io.IOPlugin;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.table.DefaultGenericTable;
+import org.scijava.table.GenericTable;
 import org.scijava.util.FileUtils;
 
 /**

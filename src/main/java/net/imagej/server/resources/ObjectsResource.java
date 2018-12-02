@@ -57,13 +57,13 @@ import net.imagej.DatasetService;
 import net.imagej.server.Utils;
 import net.imagej.server.services.ObjectInfo;
 import net.imagej.server.services.ObjectService;
-import net.imagej.table.Table;
 import net.imglib2.img.Img;
 
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.scijava.io.IOService;
 import org.scijava.plugin.Parameter;
+import org.scijava.table.Table;
 
 /**
  * Server resource for managing data structures that could not be easily handled

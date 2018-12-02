@@ -32,7 +32,6 @@ import io.scif.services.LocationService;
 import java.io.IOException;
 
 import net.imagej.server.external.DefaultTableIOPlugin;
-import net.imagej.table.GenericTable;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -42,6 +41,7 @@ import org.junit.rules.TestRule;
 import org.scijava.Context;
 import org.scijava.io.IOPlugin;
 import org.scijava.io.IOService;
+import org.scijava.table.GenericTable;
 import org.scijava.util.MersenneTwisterFast;
 
 /**
