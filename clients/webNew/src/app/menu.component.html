@@ -1,12 +1,12 @@
-<div dropdown class="btn-group" *ngFor="let topMenuItem of retrievedMenuRoot?.children">
-  <button dropdownToggle type="button" class="btn btn-primary dropdown-toggle">
-    {{topMenuItem.label}}<span class="caret"></span>
+<div class="btn-group" *ngFor="let topMenuItem of retrievedMenuRoot?.children">
+  <button type="button" class="btn btn-primary btn-menu" data-toggle="dropdown">
+    {{topMenuItem.label}}
   </button>
-  <ul *dropdownMenu class="dropdown-menu">
+  <div class="dropdown-menu">
     <ng-template ngFor let-menuItem [ngForOf]="topMenuItem?.children">
       <app-component-menu-item [menuItem]="menuItem"></app-component-menu-item>
     </ng-template>
-  </ul>
+  </div>
 </div>
 <br><br>
 <div>List of uploaded objects</div>

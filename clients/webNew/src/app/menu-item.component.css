@@ -7,14 +7,13 @@
   left: 100%;
   margin-top: -6px;
   margin-left: 0;
-  border-radius: 0.25rem;
 }
 
 .dropdown-submenu:hover > .dropdown-menu {
   display: block;
 }
 
-.dropdown-submenu > span::after {
+.dropdown-submenu >  {
   border-bottom: 0.3em solid transparent;
   border-left-color: inherit;
   border-left-style: solid;
@@ -27,14 +26,6 @@
   margin-right: -0.6em;
   margin-top: -0.95em;
   width: 0;
-}
-
-.dropdown-submenu.pull-left {
-  float: none;
-}
-
-.dropdown-submenu.pull-left > .dropdown-menu {
-  left: -75%;
 }
 
 .dropdown-menu .divider {
