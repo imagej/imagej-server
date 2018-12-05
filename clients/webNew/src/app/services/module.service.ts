@@ -72,7 +72,8 @@ export class ModuleService {
         i['softMaximum'],
         i['softMinimum'],
         i['stepSize'],
-        i['widgetStyle']));
+        i['widgetStyle'],
+        i['isResolved']));
     });
 
     return outputArray;
@@ -144,6 +145,9 @@ export class ModuleService {
 
     const componentRequests: DynamicComponentRequest[] = [];
     inputs.forEach(i => {
+      if (i.isResolved) {
+        return;
+      }
       const label = i.label || i.name;
       if (i.choices !== null) {
         switch (i.widgetStyle) {
