@@ -1,0 +1,16 @@
+$theme-colors: (
+  "primary": #efefef,
+  "light": #ffffff
+);
+
+.btn.btn-primary.btn-menu {
+  border-radius: 0px!important;
+}
+
+$dropdown-bg: map_get($theme-colors, "primary");
+
+.dropdown-menu {
+  border-radius: 0px!important;
+}
+
+@import "../node_modules/bootstrap/scss/bootstrap";
