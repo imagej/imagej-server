@@ -11,6 +11,7 @@ export class FijiModuleIO {
     public softMaximum: string,
     public softMinimum: string,
     public stepSize: string,
-    public widgetStyle: string) {
+    public widgetStyle: string,
+    public isResolved: boolean) {
   }
 }
