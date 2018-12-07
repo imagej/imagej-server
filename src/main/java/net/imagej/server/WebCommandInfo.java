@@ -1,3 +1,4 @@
+
 package net.imagej.server;
 
 import java.util.ArrayList;
@@ -24,13 +25,16 @@ public class WebCommandInfo extends CommandInfo {
 		final List<WebCommandModuleItem<?>> checkedInputs = new ArrayList<>();
 		for (final ModuleItem<?> input : super.inputs()) {
 			if (input instanceof CommandModuleItem) {
-				WebCommandModuleItem<?> webCommandModuleItem = new WebCommandModuleItem<>(this, (CommandModuleItem<?>)input);
+				final WebCommandModuleItem<Object> webCommandModuleItem =
+					new WebCommandModuleItem<>(this, ((CommandModuleItem<?>) input)
+						.getField());
 				final String name = input.getName();
 
 				// Include resolved status in the JSON feed.
 				// This is handy for judiciously overwriting already-resolved inputs,
 				// particularly the "active image" inputs, which will be reported as
-				// resolved, but not necessarily match what's selected on the client side.
+				// resolved, but not necessarily match what's selected on the client
+				// side.
 				webCommandModuleItem.isResolved = relatedModule.isInputResolved(name);
 
 				// Include startingValue in the JSON feed.
