@@ -30,16 +30,19 @@ public class WebCommandInfo extends CommandInfo {
 						.getField());
 				final String name = input.getName();
 
+				final boolean isResolved = relatedModule.isInputResolved(name);
+
 				// Include resolved status in the JSON feed.
 				// This is handy for judiciously overwriting already-resolved inputs,
 				// particularly the "active image" inputs, which will be reported as
 				// resolved, but not necessarily match what's selected on the client
 				// side.
-				webCommandModuleItem.isResolved = relatedModule.isInputResolved(name);
+				webCommandModuleItem.isResolved = isResolved;
 
-				// Include startingValue in the JSON feed.
-				// Useful for populating the dialog!
-				webCommandModuleItem.startingValue = relatedModule.getInput(name);
+				// If the input is not resolved, include startingValue in the JSON feed.
+				// This is useful for populating the dialog.
+				webCommandModuleItem.startingValue = (!isResolved) ? relatedModule
+					.getInput(name) : null;
 
 				checkedInputs.add(webCommandModuleItem);
 			}
