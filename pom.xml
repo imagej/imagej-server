@@ -15,11 +15,11 @@
 
 	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
-	<url>http://imagej.net/ImageJ_Server</url>
+	<url>https://imagej.net/ImageJ_Server</url>
 	<inceptionYear>2013</inceptionYear>
 	<organization>
 		<name>ImageJ</name>
-		<url>http://imagej.net/</url>
+		<url>https://imagej.net/</url>
 	</organization>
 	<licenses>
 		<license>
@@ -33,7 +33,7 @@
 		<developer>
 			<id>ctrueden</id>
 			<name>Curtis Rueden</name>
-			<url>http://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/User:Rueden</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -47,7 +47,7 @@
 		<developer>
 			<id>lnyng</id>
 			<name>Leon Yang</name>
-			<url>http://imagej.net/User:Leon</url>
+			<url>https://imagej.net/User:Leon</url>
 			<roles>
 				<role>developer</role>
 			</roles>
@@ -103,7 +103,7 @@ Wisconsin-Madison.</license.copyrightOwners>
 	<repositories>
 		<repository>
 			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
+			<url>https://maven.imagej.net/content/groups/public</url>
 		</repository>
 	</repositories>
 
