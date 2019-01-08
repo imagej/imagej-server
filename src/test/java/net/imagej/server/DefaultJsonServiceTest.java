@@ -94,10 +94,11 @@ public class DefaultJsonServiceTest {
 	@Test
 	public void deserializeSpecialTypes() throws Exception {
 		final LinkedHashMap<String, Object> inputs = new LinkedHashMap<>();
-		final Img<ByteType> img0 = Imgs.create(new ArrayImgFactory<>(), Intervals
-			.createMinMax(0, 10, 0, 10), new ByteType());
-		final Img<ByteType> img1 = Imgs.create(new PlanarImgFactory<>(), Intervals
-			.createMinMax(0, 10, 0, 10), new ByteType());
+		final ByteType type = new ByteType();
+		final Img<ByteType> img0 = Imgs.create(new ArrayImgFactory<>(type),
+			Intervals.createMinMax(0, 10, 0, 10), type);
+		final Img<ByteType> img1 = Imgs.create(new PlanarImgFactory<>(type),
+			Intervals.createMinMax(0, 10, 0, 10), type);
 		final Foo foo = new Foo("test string");
 		inputs.put("img0", img0);
 		inputs.put("img1", img1);
@@ -147,10 +148,10 @@ public class DefaultJsonServiceTest {
 		final FloatType floatType = new FloatType(1.5f);
 		final DoubleType doubleType = new DoubleType(1.5d);
 		final ComplexDoubleType complexDoubleType = new ComplexDoubleType(1.5, 2.5);
-		final Img<ByteType> img0 = Imgs.create(new ArrayImgFactory<>(), Intervals
-			.createMinMax(0, 10, 0, 10), new ByteType());
-		final Img<ByteType> img1 = Imgs.create(new PlanarImgFactory<>(), Intervals
-			.createMinMax(0, 10, 0, 10), new ByteType());
+		final Img<ByteType> img0 = Imgs.create(new ArrayImgFactory<>(byteType),
+			Intervals.createMinMax(0, 10, 0, 10), byteType);
+		final Img<ByteType> img1 = Imgs.create(new PlanarImgFactory<>(byteType),
+			Intervals.createMinMax(0, 10, 0, 10), byteType);
 		final Foo foo = new Foo("test string");
 		outputs.put("intType", intType);
 		outputs.put("byteType", byteType);
