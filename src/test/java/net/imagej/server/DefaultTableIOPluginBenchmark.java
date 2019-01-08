@@ -33,6 +33,7 @@ import java.io.IOException;
 
 import net.imagej.server.external.DefaultTableIOPlugin;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -58,8 +59,12 @@ public class DefaultTableIOPluginBenchmark {
 		assumeTrue(benchmarkTestsEnabled);
 	}
 
+	private static Context ctx;
+
 	@BeforeClass
 	public static void prepare() {
+		ctx = new Context();
+
 		final StringBuilder sb = new StringBuilder(10 * 1024 * 1024);
 		for (int i = 0; i < 1023; i++) {
 			sb.append(String.format("%09d,", i));
@@ -76,11 +81,14 @@ public class DefaultTableIOPluginBenchmark {
 		ctx.getService(LocationService.class).mapFile("large.csv", bah);
 	}
 
+	@AfterClass
+	public static void cleanup() {
+		ctx.dispose();
+	}
+
 	/** Needed for JUnit-Benchmarks */
 	@Rule
 	public TestRule benchmarkRun = new BenchmarkRule();
-
-	private static final Context ctx = new Context();
 
 	@Test
 	public void openLarge() {
