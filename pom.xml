@@ -11,7 +11,7 @@
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-server</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.1.2</version>
 
 	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
@@ -73,7 +73,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/imagej/imagej-server</connection>
 		<developerConnection>scm:git:git@github.com:imagej/imagej-server</developerConnection>
-		<tag>HEAD</tag>
+		<tag>imagej-server-0.1.2</tag>
 		<url>https://github.com/imagej/imagej-server</url>
 	</scm>
 	<issueManagement>
