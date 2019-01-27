@@ -49,22 +49,20 @@ import org.scijava.Context;
  *
  * @author Leon Yang
  */
-public class ImageJServer extends
-	Application<ImageJServerConfiguration>
-{
+public class ImageJServer extends Application<ImageJServerConfiguration> {
 
 	private final Context ctx;
 
 	private final ObjectService objectService;
 
 	private final JsonService jsonService;
-	
+
 	private Environment env;
 
 	public ImageJServer(final Context ctx) {
 		this.ctx = ctx;
 		objectService = new DefaultObjectService();
-		jsonService = new DefaultJsonService(objectService);
+		jsonService = new DefaultJsonService(ctx, objectService);
 	}
 
 	@Override

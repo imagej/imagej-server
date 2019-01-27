@@ -25,26 +25,28 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
-import net.imagej.Dataset;
-import net.imglib2.Interval;
 import net.imglib2.outofbounds.OutOfBoundsFactory;
 import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
 
+import org.scijava.Context;
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleItem;
+import org.scijava.plugin.PluginService;
+import org.scijava.plugin.SciJavaPlugin;
 
 /**
  * Jackson MixIns for some specific types in order to produce better output
@@ -54,10 +56,63 @@ import org.scijava.module.ModuleItem;
  */
 public class Mixins {
 
-	private static final Class<?>[] SUPPORT = { Interval.class, ComplexType.class,
-		ModuleInfo.class, ModuleItem.class };
+	public static abstract class ObjectMapperModificator implements SciJavaPlugin,
+		Consumer<ObjectMapper>
+	{
 
-	private static final Class<?>[] NOT_SUPPORT = { Dataset.class };
+		private Set<Class<?>> additionalSupport;
+		private Set<Class<?>> additionalNotSupport;
+
+		public ObjectMapperModificator(Collection<Class<?>> additionalSupport,
+			Collection<Class<?>> additionalNotSupport)
+		{
+			super();
+			this.additionalSupport = new HashSet<>(additionalSupport);
+			this.additionalNotSupport = new HashSet<>(additionalNotSupport);
+		}
+
+		public Set<Class<?>> getAdditionSupport() {
+			return additionalSupport;
+		}
+
+		public Set<Class<?>> getAdditionNotSupport() {
+			return additionalNotSupport;
+
+		}
+	}
+
+	public static class SerializerModificator<T> extends ObjectMapperModificator {
+
+		private StdSerializer<T> serializer;
+		private Class<T> clazz;
+
+		public SerializerModificator(Collection<Class<?>> additionalSupport,
+			Collection<Class<?>> additionalNotSupport, StdSerializer<T> serializer,
+			Class<T> clazz)
+		{
+			super(additionalSupport, additionalNotSupport);
+			this.serializer = serializer;
+			this.clazz = clazz;
+		}
+
+		@Override
+		public void accept(ObjectMapper mapper) {
+			SimpleModule mod = new SimpleModule();
+			mod.addSerializer(clazz, serializer);
+			mapper.registerModule(mod);
+		}
+
+	}
+
+	private static final Set<Class<?>> SUPPORT = new HashSet<Class<?>>() {
+
+		{
+			addAll(Arrays.asList(ComplexType.class, ModuleInfo.class,
+				ModuleItem.class));
+		}
+	};
+
+	private static final Set<Class<?>> NOT_SUPPORT = new HashSet<>();
 
 	private Mixins() {}
 
@@ -69,9 +124,9 @@ public class Mixins {
 	 * @return true if the given class is supported.
 	 */
 	public static boolean support(Class<?> beanClass) {
-		return Arrays.stream(NOT_SUPPORT).noneMatch(clazz -> clazz.isAssignableFrom(
-			beanClass)) && Arrays.stream(SUPPORT).anyMatch(clazz -> clazz
-				.isAssignableFrom(beanClass));
+		return NOT_SUPPORT.stream().noneMatch(clazz -> clazz.isAssignableFrom(
+			beanClass)) && SUPPORT.stream().anyMatch(clazz -> clazz.isAssignableFrom(
+				beanClass));
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE)
@@ -198,40 +253,8 @@ public class Mixins {
 		public abstract String toString();
 	}
 
-	private static class IntervalSerializer extends StdSerializer<Interval> {
-
-		protected IntervalSerializer(Class<Interval> t) {
-			super(t);
-		}
-
-		public IntervalSerializer() {
-			this(null);
-		}
-
-		@Override
-		public void serialize(Interval value, JsonGenerator gen,
-			SerializerProvider provider) throws IOException
-		{
-			gen.writeStartObject();
-			gen.writeArrayFieldStart("min");
-			for (int i = 0; i < value.numDimensions(); i++) {
-				gen.writeNumber(value.min(i));
-			}
-			gen.writeEndArray();
-			gen.writeArrayFieldStart("max");
-			for (int i = 0; i < value.numDimensions(); i++) {
-				gen.writeNumber(value.max(i));
-			}
-			gen.writeEndArray();
-			gen.writeEndObject();
-		}
-
-	}
-
 	public static void registerMixIns(final ObjectMapper mapper) {
-		SimpleModule mod = new SimpleModule();
-		mod.addSerializer(Interval.class, new IntervalSerializer());
-		mapper.registerModule(mod);
+
 		mapper.addMixIn(ComplexType.class, ToStringMixIn.class);
 		mapper.addMixIn(RealType.class, RealTypeMixIn.class);
 		mapper.addMixIn(IntegerType.class, IntegerTypeMixIn.class);
@@ -240,5 +263,17 @@ public class Mixins {
 		mapper.addMixIn(Type.class, TypeMixIn.class);
 		mapper.addMixIn(OutOfBoundsFactory.class, OutOfBoundsFactoryMixIn.class);
 
+	}
+
+	public static void processObjectMapper(final Context ctx,
+		final ObjectMapper mapper)
+	{
+		for (ObjectMapperModificator omm : ctx.getService(PluginService.class)
+			.createInstancesOfType((ObjectMapperModificator.class)))
+		{
+			SUPPORT.addAll(omm.getAdditionSupport());
+			NOT_SUPPORT.addAll(omm.getAdditionNotSupport());
+			omm.accept(mapper);
+		}
 	}
 }

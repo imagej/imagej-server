@@ -51,6 +51,8 @@ import java.util.Arrays;
 import net.imagej.server.mixins.Mixins;
 import net.imglib2.EuclideanSpace;
 
+import org.scijava.Context;
+
 /**
  * Service that handle customized JSON serialization and deserialization.
  * 
@@ -78,8 +80,9 @@ public class DefaultJsonService implements JsonService {
 	 * 
 	 * @param objectService
 	 */
-	public DefaultJsonService(final ObjectService objectService) {
-
+	public DefaultJsonService(final Context ctx,
+		final ObjectService objectService)
+	{
 		idToObjDeserializer = new UntypedObjectDeserializer(null, null) {
 
 			@Override
@@ -101,7 +104,7 @@ public class DefaultJsonService implements JsonService {
 
 		final JsonSerializer<Object> objToIdSerializer =
 			new JsonSerializer<Object>()
-		{
+			{
 
 				@Override
 				public void serialize(Object value, JsonGenerator gen,
@@ -136,6 +139,7 @@ public class DefaultJsonService implements JsonService {
 
 		// register Jackson MixIns to obtain better json output format for some
 		// specific types
+		Mixins.processObjectMapper(ctx, objToIdMapper);
 		Mixins.registerMixIns(objToIdMapper);
 	}
 
