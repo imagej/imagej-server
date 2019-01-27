@@ -36,6 +36,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
+import net.imagej.Dataset;
 import net.imglib2.Interval;
 import net.imglib2.outofbounds.OutOfBoundsFactory;
 import net.imglib2.type.numeric.ComplexType;
@@ -56,6 +57,8 @@ public class Mixins {
 	private static final Class<?>[] SUPPORT = { Interval.class, ComplexType.class,
 		ModuleInfo.class, ModuleItem.class };
 
+	private static final Class<?>[] NOT_SUPPORT = { Dataset.class };
+
 	private Mixins() {}
 
 	/**
@@ -66,8 +69,9 @@ public class Mixins {
 	 * @return true if the given class is supported.
 	 */
 	public static boolean support(Class<?> beanClass) {
-		return Arrays.stream(SUPPORT).anyMatch(clazz -> clazz.isAssignableFrom(
-			beanClass));
+		return Arrays.stream(NOT_SUPPORT).noneMatch(clazz -> clazz.isAssignableFrom(
+			beanClass)) && Arrays.stream(SUPPORT).anyMatch(clazz -> clazz
+				.isAssignableFrom(beanClass));
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE)
