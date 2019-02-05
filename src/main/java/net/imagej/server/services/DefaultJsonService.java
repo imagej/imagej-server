@@ -47,11 +47,16 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import net.imagej.server.mixins.Mixins;
+import net.imagej.server.mixins.Mixins.ObjectMapperModificator;
 import net.imglib2.EuclideanSpace;
 
 import org.scijava.Context;
+import org.scijava.plugin.PluginService;
 
 /**
  * Service that handle customized JSON serialization and deserialization.
@@ -59,6 +64,9 @@ import org.scijava.Context;
  * @author Leon Yang
  */
 public class DefaultJsonService implements JsonService {
+
+	private static final Set<Class<?>> SERIALIZABLE_BY_MAPPER_MODIFIERS =
+		new HashSet<>();
 
 	private static final Class<?>[] NOT_SERIALIZED = { EuclideanSpace.class };
 
@@ -123,13 +131,21 @@ public class DefaultJsonService implements JsonService {
 			public JsonSerializer<?> modifySerializer(SerializationConfig config,
 				BeanDescription beanDesc, JsonSerializer<?> serializer)
 			{
+				// If the serialized class is supported by mixins, let's go for one
 				if (Mixins.support(beanDesc.getBeanClass())) return serializer;
+
+				// If the serialized class is supported thanks to a modification to
+				// ObjectMapper, let's do it that way
+				if (SERIALIZABLE_BY_MAPPER_MODIFIERS.stream().anyMatch(clazz -> clazz
+					.isAssignableFrom(beanDesc.getBeanClass()))) return serializer;
+
 				// If the serialized class is unknown (i.e. serialized using the general
 				// BeanSerializer) or should not be serialized (i.e. complicated class
 				// implemented interfaces such as Iterable), would be serialized as an
 				// ID.
 				if (serializer instanceof BeanSerializer) return objToIdSerializer;
 				if (notSerialized(beanDesc.getBeanClass())) return objToIdSerializer;
+
 				return serializer;
 
 			}
@@ -137,9 +153,11 @@ public class DefaultJsonService implements JsonService {
 		objToIdMapper = new ObjectMapper();
 		objToIdMapper.registerModule(objToIdModule);
 
+		applyModifiers(objToIdMapper, ctx.getService(PluginService.class)
+			.createInstancesOfType((ObjectMapperModificator.class)));
+
 		// register Jackson MixIns to obtain better json output format for some
 		// specific types
-		Mixins.processObjectMapper(ctx, objToIdMapper);
 		Mixins.registerMixIns(objToIdMapper);
 	}
 
@@ -158,6 +176,16 @@ public class DefaultJsonService implements JsonService {
 	public boolean notSerialized(final Class<?> target) {
 		return Arrays.stream(NOT_SERIALIZED).anyMatch(clazz -> clazz
 			.isAssignableFrom(target));
+	}
+
+	private void applyModifiers(ObjectMapper mapper,
+		List<ObjectMapperModificator> modifiers)
+	{
+		for (ObjectMapperModificator modifier : modifiers) {
+			modifier.accept(mapper);
+			SERIALIZABLE_BY_MAPPER_MODIFIERS.addAll(modifier.getAdditionSupport());
+		}
+
 	}
 
 }

@@ -42,10 +42,8 @@ import net.imglib2.type.numeric.ComplexType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
 
-import org.scijava.Context;
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleItem;
-import org.scijava.plugin.PluginService;
 import org.scijava.plugin.SciJavaPlugin;
 
 /**
@@ -104,15 +102,8 @@ public class Mixins {
 
 	}
 
-	private static final Set<Class<?>> SUPPORT = new HashSet<Class<?>>() {
-
-		{
-			addAll(Arrays.asList(ComplexType.class, ModuleInfo.class,
-				ModuleItem.class));
-		}
-	};
-
-	private static final Set<Class<?>> NOT_SUPPORT = new HashSet<>();
+	private static final Class<?>[] SUPPORT = { ComplexType.class,
+		ModuleInfo.class, ModuleItem.class };
 
 	private Mixins() {}
 
@@ -124,9 +115,11 @@ public class Mixins {
 	 * @return true if the given class is supported.
 	 */
 	public static boolean support(Class<?> beanClass) {
-		return NOT_SUPPORT.stream().noneMatch(clazz -> clazz.isAssignableFrom(
+		/* return NOT_SUPPORT.stream().noneMatch(clazz -> clazz.isAssignableFrom(
 			beanClass)) && SUPPORT.stream().anyMatch(clazz -> clazz.isAssignableFrom(
-				beanClass));
+				beanClass)); */
+		return Arrays.stream(SUPPORT).anyMatch(clazz -> clazz.isAssignableFrom(
+			beanClass));
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE)
@@ -265,15 +258,4 @@ public class Mixins {
 
 	}
 
-	public static void processObjectMapper(final Context ctx,
-		final ObjectMapper mapper)
-	{
-		for (ObjectMapperModificator omm : ctx.getService(PluginService.class)
-			.createInstancesOfType((ObjectMapperModificator.class)))
-		{
-			SUPPORT.addAll(omm.getAdditionSupport());
-			NOT_SUPPORT.addAll(omm.getAdditionNotSupport());
-			omm.accept(mapper);
-		}
-	}
 }
