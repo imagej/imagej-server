@@ -47,9 +47,10 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import net.imagej.server.mixins.Mixins;
 import net.imagej.server.mixins.Mixins.ObjectMapperModificator;
@@ -65,8 +66,8 @@ import org.scijava.plugin.PluginService;
  */
 public class DefaultJsonService implements JsonService {
 
-	private static final Set<Class<?>> SERIALIZABLE_BY_MAPPER_MODIFIERS =
-		new HashSet<>();
+	private static final Map<Class<?>, Collection<Class<?>>> SERIALIZABLE_BY_MAPPER_MODIFIERS =
+		new HashMap<>();
 
 	private static final Class<?>[] NOT_SERIALIZED = { EuclideanSpace.class };
 
@@ -131,20 +132,24 @@ public class DefaultJsonService implements JsonService {
 			public JsonSerializer<?> modifySerializer(SerializationConfig config,
 				BeanDescription beanDesc, JsonSerializer<?> serializer)
 			{
+				final Class<?> desiredClass = beanDesc.getBeanClass();
+
 				// If the serialized class is supported by mixins, let's go for one
-				if (Mixins.support(beanDesc.getBeanClass())) return serializer;
+				if (Mixins.support(desiredClass)) return serializer;
 
 				// If the serialized class is supported thanks to a modification to
 				// ObjectMapper, let's do it that way
-				if (SERIALIZABLE_BY_MAPPER_MODIFIERS.stream().anyMatch(clazz -> clazz
-					.isAssignableFrom(beanDesc.getBeanClass()))) return serializer;
+				if (SERIALIZABLE_BY_MAPPER_MODIFIERS.entrySet().stream().anyMatch(e -> e
+					.getKey().isAssignableFrom(desiredClass) && e.getValue().stream()
+						.noneMatch(v -> v.isAssignableFrom(desiredClass))))
+					return serializer;
 
 				// If the serialized class is unknown (i.e. serialized using the general
 				// BeanSerializer) or should not be serialized (i.e. complicated class
 				// implemented interfaces such as Iterable), would be serialized as an
 				// ID.
 				if (serializer instanceof BeanSerializer) return objToIdSerializer;
-				if (notSerialized(beanDesc.getBeanClass())) return objToIdSerializer;
+				if (notSerialized(desiredClass)) return objToIdSerializer;
 
 				return serializer;
 
@@ -183,7 +188,11 @@ public class DefaultJsonService implements JsonService {
 	{
 		for (ObjectMapperModificator modifier : modifiers) {
 			modifier.accept(mapper);
-			SERIALIZABLE_BY_MAPPER_MODIFIERS.addAll(modifier.getAdditionSupport());
+
+			// TODO: Add logic on two modifiers for the same class but with different
+			// exclusions etc.
+			SERIALIZABLE_BY_MAPPER_MODIFIERS.put(modifier.getSupportedClass(),
+				modifier.getExcludedClasses());
 		}
 
 	}

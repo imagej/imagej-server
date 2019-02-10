@@ -58,23 +58,23 @@ public class Mixins {
 		Consumer<ObjectMapper>
 	{
 
-		private Set<Class<?>> additionalSupport;
-		private Set<Class<?>> additionalNotSupport;
+		private Class<?> supportedClass;
+		private Set<Class<?>> excludedClasses;
 
-		public ObjectMapperModificator(Collection<Class<?>> additionalSupport,
-			Collection<Class<?>> additionalNotSupport)
+		public ObjectMapperModificator(Class<?> supportedClass,
+			Collection<Class<?>> excludedClasses)
 		{
 			super();
-			this.additionalSupport = new HashSet<>(additionalSupport);
-			this.additionalNotSupport = new HashSet<>(additionalNotSupport);
+			this.supportedClass = supportedClass;
+			this.excludedClasses = new HashSet<>(excludedClasses);
 		}
 
-		public Set<Class<?>> getAdditionSupport() {
-			return additionalSupport;
+		public Class<?> getSupportedClass() {
+			return supportedClass;
 		}
 
-		public Set<Class<?>> getAdditionNotSupport() {
-			return additionalNotSupport;
+		public Set<Class<?>> getExcludedClasses() {
+			return excludedClasses;
 
 		}
 	}
@@ -84,11 +84,11 @@ public class Mixins {
 		private StdSerializer<T> serializer;
 		private Class<T> clazz;
 
-		public SerializerModificator(Collection<Class<?>> additionalSupport,
-			Collection<Class<?>> additionalNotSupport, StdSerializer<T> serializer,
+		public SerializerModificator(Class<?> supportedClass,
+			Collection<Class<?>> excludedClasses, StdSerializer<T> serializer,
 			Class<T> clazz)
 		{
-			super(additionalSupport, additionalNotSupport);
+			super(supportedClass, excludedClasses);
 			this.serializer = serializer;
 			this.clazz = clazz;
 		}
