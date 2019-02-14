@@ -26,16 +26,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
 
 import net.imglib2.outofbounds.OutOfBoundsFactory;
 import net.imglib2.type.numeric.ComplexType;
@@ -44,7 +38,6 @@ import net.imglib2.type.numeric.RealType;
 
 import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleItem;
-import org.scijava.plugin.SciJavaPlugin;
 
 /**
  * Jackson MixIns for some specific types in order to produce better output
@@ -53,54 +46,6 @@ import org.scijava.plugin.SciJavaPlugin;
  * @author Leon Yang
  */
 public class Mixins {
-
-	public static abstract class ObjectMapperModificator implements SciJavaPlugin,
-		Consumer<ObjectMapper>
-	{
-
-		private Class<?> supportedClass;
-		private Set<Class<?>> excludedClasses;
-
-		public ObjectMapperModificator(Class<?> supportedClass,
-			Collection<Class<?>> excludedClasses)
-		{
-			super();
-			this.supportedClass = supportedClass;
-			this.excludedClasses = new HashSet<>(excludedClasses);
-		}
-
-		public Class<?> getSupportedClass() {
-			return supportedClass;
-		}
-
-		public Set<Class<?>> getExcludedClasses() {
-			return excludedClasses;
-
-		}
-	}
-
-	public static class SerializerModificator<T> extends ObjectMapperModificator {
-
-		private StdSerializer<T> serializer;
-		private Class<T> clazz;
-
-		public SerializerModificator(Class<?> supportedClass,
-			Collection<Class<?>> excludedClasses, StdSerializer<T> serializer,
-			Class<T> clazz)
-		{
-			super(supportedClass, excludedClasses);
-			this.serializer = serializer;
-			this.clazz = clazz;
-		}
-
-		@Override
-		public void accept(ObjectMapper mapper) {
-			SimpleModule mod = new SimpleModule();
-			mod.addSerializer(clazz, serializer);
-			mapper.registerModule(mod);
-		}
-
-	}
 
 	private static final Class<?>[] SUPPORT = { ComplexType.class,
 		ModuleInfo.class, ModuleItem.class };
@@ -115,9 +60,6 @@ public class Mixins {
 	 * @return true if the given class is supported.
 	 */
 	public static boolean support(Class<?> beanClass) {
-		/* return NOT_SUPPORT.stream().noneMatch(clazz -> clazz.isAssignableFrom(
-			beanClass)) && SUPPORT.stream().anyMatch(clazz -> clazz.isAssignableFrom(
-				beanClass)); */
 		return Arrays.stream(SUPPORT).anyMatch(clazz -> clazz.isAssignableFrom(
 			beanClass));
 	}

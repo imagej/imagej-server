@@ -48,12 +48,11 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import net.imagej.server.mixins.Mixins;
-import net.imagej.server.mixins.Mixins.ObjectMapperModificator;
+import net.imagej.server.modifiers.ObjectMapperModifier;
 import net.imglib2.EuclideanSpace;
 
 import org.scijava.Context;
@@ -65,9 +64,6 @@ import org.scijava.plugin.PluginService;
  * @author Leon Yang
  */
 public class DefaultJsonService implements JsonService {
-
-	private static final Map<Class<?>, Collection<Class<?>>> SERIALIZABLE_BY_MAPPER_MODIFIERS =
-		new HashMap<>();
 
 	private static final Class<?>[] NOT_SERIALIZED = { EuclideanSpace.class };
 
@@ -83,6 +79,9 @@ public class DefaultJsonService implements JsonService {
 	 * ObjectService. Could be injected into different ObjectMappers.
 	 */
 	private final UntypedObjectDeserializer idToObjDeserializer;
+
+	private final Collection<ObjectMapperModifier> objectMapperModifiers =
+		new LinkedList<>();
 
 	/**
 	 * Constructs and initializes a JsonService with an {@link ObjectService}.
@@ -139,10 +138,8 @@ public class DefaultJsonService implements JsonService {
 
 				// If the serialized class is supported thanks to a modification to
 				// ObjectMapper, let's do it that way
-				if (SERIALIZABLE_BY_MAPPER_MODIFIERS.entrySet().stream().anyMatch(e -> e
-					.getKey().isAssignableFrom(desiredClass) && e.getValue().stream()
-						.noneMatch(v -> v.isAssignableFrom(desiredClass))))
-					return serializer;
+				if (objectMapperModifiers.stream().anyMatch(e -> e.isSupportedBy(
+					desiredClass))) return serializer;
 
 				// If the serialized class is unknown (i.e. serialized using the general
 				// BeanSerializer) or should not be serialized (i.e. complicated class
@@ -159,7 +156,7 @@ public class DefaultJsonService implements JsonService {
 		objToIdMapper.registerModule(objToIdModule);
 
 		applyModifiers(objToIdMapper, ctx.getService(PluginService.class)
-			.createInstancesOfType((ObjectMapperModificator.class)));
+			.createInstancesOfType((ObjectMapperModifier.class)));
 
 		// register Jackson MixIns to obtain better json output format for some
 		// specific types
@@ -184,15 +181,14 @@ public class DefaultJsonService implements JsonService {
 	}
 
 	private void applyModifiers(ObjectMapper mapper,
-		List<ObjectMapperModificator> modifiers)
+		List<ObjectMapperModifier> modifiers)
 	{
-		for (ObjectMapperModificator modifier : modifiers) {
+		for (ObjectMapperModifier modifier : modifiers) {
 			modifier.accept(mapper);
 
 			// TODO: Add logic on two modifiers for the same class but with different
 			// exclusions etc.
-			SERIALIZABLE_BY_MAPPER_MODIFIERS.put(modifier.getSupportedClass(),
-				modifier.getExcludedClasses());
+			objectMapperModifiers.add(modifier);
 		}
 
 	}
