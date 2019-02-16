@@ -48,8 +48,6 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 import net.imagej.server.mixins.Mixins;
 import net.imagej.server.modifiers.ObjectMapperModifier;
@@ -80,8 +78,7 @@ public class DefaultJsonService implements JsonService {
 	 */
 	private final UntypedObjectDeserializer idToObjDeserializer;
 
-	private final Collection<ObjectMapperModifier> objectMapperModifiers =
-		new LinkedList<>();
+	private final Collection<ObjectMapperModifier> objectMapperModifiers;
 
 	/**
 	 * Constructs and initializes a JsonService with an {@link ObjectService}.
@@ -155,8 +152,10 @@ public class DefaultJsonService implements JsonService {
 		objToIdMapper = new ObjectMapper();
 		objToIdMapper.registerModule(objToIdModule);
 
-		applyModifiers(objToIdMapper, ctx.getService(PluginService.class)
-			.createInstancesOfType((ObjectMapperModifier.class)));
+		objectMapperModifiers = ctx.getService(PluginService.class)
+			.createInstancesOfType((ObjectMapperModifier.class));
+
+		applyModifiers();
 
 		// register Jackson MixIns to obtain better json output format for some
 		// specific types
@@ -180,17 +179,9 @@ public class DefaultJsonService implements JsonService {
 			.isAssignableFrom(target));
 	}
 
-	private void applyModifiers(ObjectMapper mapper,
-		List<ObjectMapperModifier> modifiers)
-	{
-		for (ObjectMapperModifier modifier : modifiers) {
-			modifier.accept(mapper);
-
-			// TODO: Add logic on two modifiers for the same class but with different
-			// exclusions etc.
-			objectMapperModifiers.add(modifier);
+	private void applyModifiers() {
+		for (ObjectMapperModifier modifier : objectMapperModifiers) {
+			modifier.accept(objToIdMapper);
 		}
-
 	}
-
 }
