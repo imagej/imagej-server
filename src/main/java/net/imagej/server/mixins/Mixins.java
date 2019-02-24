@@ -189,7 +189,6 @@ public class Mixins {
 	}
 
 	public static void registerMixIns(final ObjectMapper mapper) {
-
 		mapper.addMixIn(ComplexType.class, ToStringMixIn.class);
 		mapper.addMixIn(RealType.class, RealTypeMixIn.class);
 		mapper.addMixIn(IntegerType.class, IntegerTypeMixIn.class);
@@ -197,7 +196,5 @@ public class Mixins {
 		mapper.addMixIn(ModuleItem.class, ModuleItemMixIn.class);
 		mapper.addMixIn(Type.class, TypeMixIn.class);
 		mapper.addMixIn(OutOfBoundsFactory.class, OutOfBoundsFactoryMixIn.class);
-
 	}
-
 }
