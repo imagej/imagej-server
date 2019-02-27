@@ -47,10 +47,10 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 
+import net.imagej.server.json.SciJavaJsonSerializer;
 import net.imagej.server.mixins.Mixins;
-import net.imagej.server.modifiers.ObjectMapperModifier;
 import net.imglib2.EuclideanSpace;
 
 import org.scijava.Context;
@@ -78,7 +78,7 @@ public class DefaultJsonService implements JsonService {
 	 */
 	private final UntypedObjectDeserializer idToObjDeserializer;
 
-	private final Collection<ObjectMapperModifier> objectMapperModifiers;
+	private final List<?> jsonSerializers;
 
 	/**
 	 * Constructs and initializes a JsonService with an {@link ObjectService}.
@@ -135,7 +135,8 @@ public class DefaultJsonService implements JsonService {
 
 				// If the serialized class is supported thanks to a modification to
 				// ObjectMapper, let's do it that way
-				if (objectMapperModifiers.stream().anyMatch(e -> e.isSupportedBy(
+				if (jsonSerializers.stream().map(obj -> (SciJavaJsonSerializer<?>) obj)
+					.anyMatch(e -> e.isSupportedBy(
 					desiredClass))) return serializer;
 
 				// If the serialized class is unknown (i.e. serialized using the general
@@ -152,10 +153,10 @@ public class DefaultJsonService implements JsonService {
 		objToIdMapper = new ObjectMapper();
 		objToIdMapper.registerModule(objToIdModule);
 
-		objectMapperModifiers = ctx.getService(PluginService.class)
-			.createInstancesOfType((ObjectMapperModifier.class));
+		jsonSerializers = ctx.getService(PluginService.class).createInstancesOfType(
+			SciJavaJsonSerializer.class);
 
-		applyModifiers();
+		registerSerializers();
 
 		// register Jackson MixIns to obtain better json output format for some
 		// specific types
@@ -179,9 +180,8 @@ public class DefaultJsonService implements JsonService {
 			.isAssignableFrom(target));
 	}
 
-	private void applyModifiers() {
-		for (ObjectMapperModifier modifier : objectMapperModifiers) {
-			modifier.accept(objToIdMapper);
-		}
+	private void registerSerializers() {
+		jsonSerializers.stream().map(obj -> (SciJavaJsonSerializer<?>) obj).forEach(
+			serializer -> serializer.register(objToIdMapper));
 	}
 }
