@@ -34,9 +34,6 @@ public class SciJavaJsonSerializerTest {
 		final DefaultObjectService objectService = new DefaultObjectService();
 		final DefaultJsonService jsonService = new DefaultJsonService(new Context(),
 			objectService);
-		final ExampleIntervalJsonSerializer serializer =
-			new ExampleIntervalJsonSerializer();
-		serializer.register(mapper);
 		jsonService.addDeserializerTo(mapper);
 
 		final Interval testInterval = new FinalInterval(new long[] { 0, 1 },
