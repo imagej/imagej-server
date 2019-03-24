@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import io.dropwizard.jackson.Jackson;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.imagej.Dataset;
@@ -38,7 +38,7 @@ public class SciJavaJsonSerializerTest {
 
 		final Interval testInterval = new FinalInterval(new long[] { 0, 1 },
 			new long[] { 8, 9 });
-		final LinkedHashMap<String, Object> outputs = new LinkedHashMap<>();
+		final Map<String, Object> outputs = new HashMap<>();
 		outputs.put("testInterval", testInterval);
 
 		final String parsed = jsonService.parseObject(outputs);
