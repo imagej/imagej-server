@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.imagej.Dataset;
 import net.imagej.server.json.SciJavaJsonSerializer;
 import net.imagej.server.services.DefaultJsonService;
 import net.imagej.server.services.DefaultObjectService;
@@ -57,8 +56,7 @@ public class SciJavaJsonSerializerTest {
 
 		@Override
 		public boolean isSupportedBy(Class<?> desiredClass) {
-			return SciJavaJsonSerializer.super.isSupportedBy(desiredClass) &&
-				!Dataset.class.isAssignableFrom(desiredClass);
+			return desiredClass.equals(FinalInterval.class);
 		}
 
 		@Override
