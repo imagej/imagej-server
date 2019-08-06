@@ -33,9 +33,9 @@ There are several ways to invoke the server:
 
 <details><summary><b>If ImageJ is already running</b></summary>
 
-* Use _Plugins &#8250; Server &#8250; Start_
+* Use _Plugins &#8250; Utilites &#8250; Start Server_
   to make ImageJ start listening for remote commands.
-* Use _Plugins &#8250; Server &#8250; Stop_
+* Use _Plugins &#8250; Utilites &#8250; Stop Server_
   to shut down the server. The local ImageJ will continue running.
 
 You must enable the Server [update site](https://imagej.net/Update_Sites) first.
@@ -140,13 +140,13 @@ Compilation and execution (development)
 - __GET__ /modules
 
  Returns a list of modules. By default, imagej-server exposes its API at `localhost:8080`, which will be used throughout this documentation.
- 
+
  `$ curl localhost:8080/modules`
 
 - __GET__ /modules/*{id}*
 
  Returns detailed information of a module specified by `{id}`. Notice that `{id}` could contain special characters such as dollar sign (`$`), which needs to be escaped when using `cURL`.
- 
+
  `$ curl localhost:8080/modules/'command:net.imagej.ops.math.PrimitiveMath$IntegerAdd'`
 
 - __POST__ /modules/*{id}*?process=*{process}*
@@ -162,13 +162,13 @@ Compilation and execution (development)
 - __GET__ /objects
 
  Lists all object IDs available on imagej-server.
- 
+
  `$ curl localhost:8080/io/objects`
 
 - __GET__ /objects/*{id}*
 
  Shows the information of an object.
- 
+
  ```
  $ curl localhost:8080/io/objects/object:1234567890abcdef
  {"class":"net.imagej.DefaultDataset","created_at":"Sun Jan 01 00:00:00 CST 2017"}
@@ -177,7 +177,7 @@ Compilation and execution (development)
 - __DELETE__ /objects/*{id}*
 
  Delete one object from imagej-server.
- 
+
  `$ curl -XDELETE localhost:8080/objects/object:1234567890abcdef`
 
 - __POST__ /objects/upload?[type=*{type}*]
@@ -203,11 +203,11 @@ Compilation and execution (development)
 
 ## Notes and memo
 
-- DefaultObjectService effectively prevents garbage collection of all objects produced during the lifetime of this imagej-server instance, which could lead to serious memory issues. The timestamped object ID could be used to determine if an object should "expire" on a regular basis or when memory runs low. 
+- DefaultObjectService effectively prevents garbage collection of all objects produced during the lifetime of this imagej-server instance, which could lead to serious memory issues. The timestamped object ID could be used to determine if an object should "expire" on a regular basis or when memory runs low.
 - Ops that need to be initialized are not working when run as module. See the HACK in `ModulesResource`
 - The converters from `Number` to `NumericType` could be refined and considered moving to other projects such as SciJava.
 - It might be a good idea for the client to provide optional language-neutral type information for module execution, so that we can support more complex data structures without too much guessing. This would also solve the problem of nested special object (i.e. `List<Integer>` could not be converted into `List<IntType>` even with converter between `Integer` and `IntType`).
 - What test framework should be used?
 - Might need to add logging/debug info
 - The module information should be improved. The inputs outputs names are not very informative.
--  The current design of setting inputs/getting outputs could easily break if those names are changed. Should we just assume they will never change, or should those libraries (i.e. Ops) also take care of all the client implementation?
+- The current design of setting inputs/getting outputs could easily break if those names are changed. Should we just assume they will never change, or should those libraries (i.e. Ops) also take care of all the client implementation?
