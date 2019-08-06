@@ -33,9 +33,9 @@ There are several ways to invoke the server:
 
 <details><summary><b>If ImageJ is already running</b></summary>
 
-* Use _Plugins &#8250; Utilites &#8250; Start Server_
+* Use _Plugins &#8250; Utilities &#8250; Start Server_
   to make ImageJ start listening for remote commands.
-* Use _Plugins &#8250; Utilites &#8250; Stop Server_
+* Use _Plugins &#8250; Utilities &#8250; Stop Server_
   to shut down the server. The local ImageJ will continue running.
 
 You must enable the Server [update site](https://imagej.net/Update_Sites) first.
