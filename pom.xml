@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>26.0.0</version>
+		<version>29.2.1</version>
 		<relativePath />
 	</parent>
 
@@ -93,12 +93,16 @@
 Wisconsin-Madison.</license.copyrightOwners>
 		<license.projectName>ImageJ server for RESTful access to ImageJ.</license.projectName>
 
-		<dropwizard.version>1.2.0</dropwizard.version>
-		<jersey-media-multipart.version>2.23.2</jersey-media-multipart.version>
-		<scifio.version>0.37.5</scifio.version>
+		<dropwizard.version>2.0.9</dropwizard.version>
+		<jackson.version>2.11.2</jackson.version>
+		<jersey-media-multipart.version>2.31</jersey-media-multipart.version>
+		<scijava-table.version>0.7.0</scijava-table.version>
+		<scijava-plugins-io-table.version>0.4.0</scijava-plugins-io-table.version>
+		<scijava-common.version>2.84.0</scijava-common.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+
 	</properties>
 
 	<repositories>
@@ -122,6 +126,14 @@ Wisconsin-Madison.</license.copyrightOwners>
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
 				</exclusion>
+				<!--
+				NB: Conflicts with jakarta.servlet:jakarta.servlet-api which is brought in by
+				io.dropwizard:dropwizard-core and io.dropwizard:dropwizard-testing.
+				-->
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>javax.servlet-api</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -133,6 +145,21 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey-media-multipart.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -165,6 +192,7 @@ Wisconsin-Madison.</license.copyrightOwners>
 		<dependency>
 			<groupId>io.dropwizard</groupId>
 			<artifactId>dropwizard-testing</artifactId>
+			<version>${dropwizard.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.ow2.asm</groupId>
@@ -173,13 +201,4 @@ Wisconsin-Madison.</license.copyrightOwners>
 			</exclusions>
 		</dependency>
 	</dependencies>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.dropwizard</groupId>
-				<artifactId>dropwizard-testing</artifactId>
-				<version>${dropwizard.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 </project>

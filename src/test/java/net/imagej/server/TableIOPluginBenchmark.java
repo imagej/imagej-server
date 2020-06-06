@@ -21,18 +21,8 @@
 
 package net.imagej.server;
 
-import static org.junit.Assume.assumeTrue;
-
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
-
-import io.scif.io.ByteArrayHandle;
-import io.scif.services.LocationService;
-
-import java.io.IOException;
-
-import net.imagej.server.external.DefaultTableIOPlugin;
-
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -42,14 +32,20 @@ import org.junit.rules.TestRule;
 import org.scijava.Context;
 import org.scijava.io.IOPlugin;
 import org.scijava.io.IOService;
-import org.scijava.table.GenericTable;
+import org.scijava.io.handle.BytesHandle;
+import org.scijava.table.Table;
+import org.scijava.table.io.TableIOPlugin;
 import org.scijava.util.MersenneTwisterFast;
+
+import java.io.IOException;
+
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author Leon Yang
  */
 @BenchmarkOptions(benchmarkRounds = 20, warmupRounds = 1)
-public class DefaultTableIOPluginBenchmark {
+public class TableIOPluginBenchmark {
 
 	private boolean benchmarkTestsEnabled = "enabled".equals(System.getProperty(
 		"imagej.server.benchmark.tests"));
@@ -62,7 +58,7 @@ public class DefaultTableIOPluginBenchmark {
 	private static Context ctx;
 
 	@BeforeClass
-	public static void prepare() {
+	public static void prepare() throws IOException {
 		ctx = new Context();
 
 		final StringBuilder sb = new StringBuilder(10 * 1024 * 1024);
@@ -77,8 +73,8 @@ public class DefaultTableIOPluginBenchmark {
 			}
 			sb.append(String.format("%.6f\r\n", r.nextFloat()));
 		}
-		final ByteArrayHandle bah = new ByteArrayHandle(sb.toString().getBytes());
-		ctx.getService(LocationService.class).mapFile("large.csv", bah);
+		final BytesHandle bah = new BytesHandle();
+		bah.write(sb.toString().getBytes());
 	}
 
 	@AfterClass
@@ -92,8 +88,8 @@ public class DefaultTableIOPluginBenchmark {
 
 	@Test
 	public void openLarge() {
-		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
-			.getInstance(DefaultTableIOPlugin.class);
+		final IOPlugin<Table> tableIO = ctx.service(IOService.class)
+			.getInstance(TableIOPlugin.class);
 		try {
 			tableIO.open("large.csv");
 		}
