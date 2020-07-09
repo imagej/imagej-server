@@ -47,9 +47,14 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
+import net.imagej.server.json.SciJavaJsonSerializer;
 import net.imagej.server.mixins.Mixins;
 import net.imglib2.EuclideanSpace;
+
+import org.scijava.Context;
+import org.scijava.plugin.PluginService;
 
 /**
  * Service that handle customized JSON serialization and deserialization.
@@ -73,13 +78,16 @@ public class DefaultJsonService implements JsonService {
 	 */
 	private final UntypedObjectDeserializer idToObjDeserializer;
 
+	private final List<?> jsonSerializers;
+
 	/**
 	 * Constructs and initializes a JsonService with an {@link ObjectService}.
 	 * 
 	 * @param objectService
 	 */
-	public DefaultJsonService(final ObjectService objectService) {
-
+	public DefaultJsonService(final Context ctx,
+		final ObjectService objectService)
+	{
 		idToObjDeserializer = new UntypedObjectDeserializer(null, null) {
 
 			@Override
@@ -101,7 +109,7 @@ public class DefaultJsonService implements JsonService {
 
 		final JsonSerializer<Object> objToIdSerializer =
 			new JsonSerializer<Object>()
-		{
+			{
 
 				@Override
 				public void serialize(Object value, JsonGenerator gen,
@@ -120,19 +128,35 @@ public class DefaultJsonService implements JsonService {
 			public JsonSerializer<?> modifySerializer(SerializationConfig config,
 				BeanDescription beanDesc, JsonSerializer<?> serializer)
 			{
-				if (Mixins.support(beanDesc.getBeanClass())) return serializer;
+				final Class<?> desiredClass = beanDesc.getBeanClass();
+
+				// If the serialized class is supported by mixins, let's go for one
+				if (Mixins.support(desiredClass)) return serializer;
+
+				// If the serialized class is supported thanks to a modification to
+				// ObjectMapper, let's do it that way
+				if (jsonSerializers.stream().map(obj -> (SciJavaJsonSerializer<?>) obj)
+					.anyMatch(e -> e.isSupportedBy(
+					desiredClass))) return serializer;
+
 				// If the serialized class is unknown (i.e. serialized using the general
 				// BeanSerializer) or should not be serialized (i.e. complicated class
 				// implemented interfaces such as Iterable), would be serialized as an
 				// ID.
 				if (serializer instanceof BeanSerializer) return objToIdSerializer;
-				if (notSerialized(beanDesc.getBeanClass())) return objToIdSerializer;
+				if (notSerialized(desiredClass)) return objToIdSerializer;
+
 				return serializer;
 
 			}
 		});
 		objToIdMapper = new ObjectMapper();
 		objToIdMapper.registerModule(objToIdModule);
+
+		jsonSerializers = ctx.getService(PluginService.class).createInstancesOfType(
+			SciJavaJsonSerializer.class);
+
+		registerSerializers();
 
 		// register Jackson MixIns to obtain better json output format for some
 		// specific types
@@ -156,4 +180,8 @@ public class DefaultJsonService implements JsonService {
 			.isAssignableFrom(target));
 	}
 
+	private void registerSerializers() {
+		jsonSerializers.stream().map(obj -> (SciJavaJsonSerializer<?>) obj).forEach(
+			serializer -> serializer.register(objToIdMapper));
+	}
 }

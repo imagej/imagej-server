@@ -46,7 +46,7 @@ public abstract class AbstractResourceTest {
 	protected static final ObjectService objectService =
 		new DefaultObjectService();
 
-	protected static final JsonService jsonService = new DefaultJsonService(
+	protected static final JsonService jsonService = new DefaultJsonService(ctx,
 		objectService);
 
 	protected static final ObjectMapper objectMapper = new ObjectMapper();

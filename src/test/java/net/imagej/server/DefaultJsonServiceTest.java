@@ -54,6 +54,7 @@ import net.imglib2.util.Intervals;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.scijava.Context;
 
 /**
  * Test deserialization and serialization using DefaultJsonService.
@@ -66,12 +67,13 @@ public class DefaultJsonServiceTest {
 	private ObjectMapper modifiedMapper;
 	private ListObjectService objectService;
 	private DefaultJsonService jsonService;
+	protected static final Context ctx = new Context();
 
 	@Before
 	public void setup() {
 		modifiedMapper = Jackson.newObjectMapper();
 		objectService = new ListObjectService();
-		jsonService = new DefaultJsonService(objectService);
+		jsonService = new DefaultJsonService(ctx, objectService);
 		jsonService.addDeserializerTo(modifiedMapper);
 	}
 
