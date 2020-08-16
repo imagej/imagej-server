@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -93,26 +93,21 @@
 Wisconsin-Madison.</license.copyrightOwners>
 		<license.projectName>ImageJ server for RESTful access to ImageJ.</license.projectName>
 
-		<dropwizard.version>2.0.9</dropwizard.version>
-		<jackson.version>2.11.2</jackson.version>
-		<jersey-media-multipart.version>2.31</jersey-media-multipart.version>
-		<scijava-table.version>0.7.0</scijava-table.version>
-		<scijava-plugins-io-table.version>0.4.0</scijava-plugins-io-table.version>
-		<scijava-common.version>2.84.0</scijava-common.version>
-
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>deploy-to-scijava</releaseProfiles>
 
+		<dropwizard.version>2.0.9</dropwizard.version>
+		<dropwizard-core.version>${dropwizard.version}</dropwizard-core.version>
+		<dropwizard-testing.version>${dropwizard.version}</dropwizard-testing.version>
+		<jersey-media-multipart.version>2.31</jersey-media-multipart.version>
+
+		<scijava-table.version>0.7.0</scijava-table.version>
+		<scijava-plugins-io-table.version>0.4.0</scijava-plugins-io-table.version>
+		<scijava-common.version>2.84.0</scijava-common.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>scijava.public</id>
-			<url>https://maven.scijava.org/content/groups/public</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
+		<!-- ImageJ dependencies -->
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
@@ -134,33 +129,30 @@ Wisconsin-Madison.</license.copyrightOwners>
 					<groupId>javax.servlet</groupId>
 					<artifactId>javax.servlet-api</artifactId>
 				</exclusion>
+				<!--
+				NB: Conflicts with org.slf4j:log4j-over-slf4j which is brought in by
+				io.dropwizard:dropwizard-logging via io.dropwizard:dropwizard-core.
+				-->
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
+
+		<!-- Dropwizard dependencies -->
 		<dependency>
 			<groupId>io.dropwizard</groupId>
 			<artifactId>dropwizard-core</artifactId>
-			<version>${dropwizard.version}</version>
+			<version>${dropwizard-core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey-media-multipart.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>${jackson.version}</version>
-		</dependency>
+
+		<!-- Test scope dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -172,33 +164,17 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-ops</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-common</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.scijava</groupId>
-			<artifactId>scijava-table</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>io.dropwizard</groupId>
 			<artifactId>dropwizard-testing</artifactId>
-			<version>${dropwizard.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.ow2.asm</groupId>
-					<artifactId>asm-debug-all</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>${dropwizard-testing.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
+	</repositories>
 </project>
