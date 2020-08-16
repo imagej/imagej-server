@@ -163,14 +163,14 @@ Compilation and execution (development)
 
  Lists all object IDs available on imagej-server.
 
- `$ curl localhost:8080/io/objects`
+ `$ curl localhost:8080/objects`
 
 - __GET__ /objects/*{id}*
 
  Shows the information of an object.
 
  ```
- $ curl localhost:8080/io/objects/object:1234567890abcdef
+ $ curl localhost:8080/objects/object:1234567890abcdef
  {"class":"net.imagej.DefaultDataset","created_at":"Sun Jan 01 00:00:00 CST 2017"}
  ```
 
@@ -185,7 +185,7 @@ Compilation and execution (development)
  Uploads a file to server. A 16-bit lowercase alphanumeric ID prefixed with `object:` will be returned as a JSON string. The ID can be used in module execution to represent the file. Currently only supports uploading images and tables in text. An optional query parameter `type` could be provided as hint to file type. If it is empty, filename would be used for guessing.
 
  ```
- $ curl -F "file=@src/test/resources/imgs/about4.tif" localhost:8080/objects/
+ $ curl -F "file=@src/test/resources/imgs/about4.tif" localhost:8080/objects/upload
  {"id":"object:0123456789abcdef"}
  ```
 

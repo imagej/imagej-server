@@ -24,16 +24,23 @@ package net.imagej.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-
 import io.scif.config.SCIFIOConfig;
-import io.scif.io.ByteArrayHandle;
 import io.scif.services.DatasetIOService;
-import io.scif.services.LocationService;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
+import net.imagej.Dataset;
+import net.imagej.DatasetService;
+import net.imagej.server.Utils;
+import net.imagej.server.services.ObjectInfo;
+import net.imagej.server.services.ObjectService;
+import net.imglib2.img.Img;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.scijava.io.IOService;
+import org.scijava.io.handle.BytesHandle;
+import org.scijava.io.location.BytesLocation;
+import org.scijava.plugin.Parameter;
+import org.scijava.table.Table;
+import org.scijava.table.io.TableIOOptions;
+import org.scijava.table.io.TableIOService;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -51,19 +58,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
-
-import net.imagej.Dataset;
-import net.imagej.DatasetService;
-import net.imagej.server.Utils;
-import net.imagej.server.services.ObjectInfo;
-import net.imagej.server.services.ObjectService;
-import net.imglib2.img.Img;
-
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.scijava.io.IOService;
-import org.scijava.plugin.Parameter;
-import org.scijava.table.Table;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Set;
 
 /**
  * Server resource for managing data structures that could not be easily handled
@@ -82,7 +80,7 @@ public class ObjectsResource {
 	private DatasetIOService datasetIOService;
 
 	@Parameter
-	private LocationService locationService;
+	private TableIOService tableIOService;
 
 	@Parameter
 	private IOService ioService;
@@ -167,18 +165,15 @@ public class ObjectsResource {
 		@FormDataParam("file") final FormDataContentDisposition fileDetail,
 		@QueryParam("type") final String typeHint)
 	{
-		final ByteArrayHandle bah;
+		BytesHandle bah;
 		try {
-			bah = readFileInputStream(fileInputStream);
+			bah = readFileInputStream(fileInputStream, fileDetail.getFileName());
 		}
 		catch (IOException exc) {
 			throw new WebApplicationException(exc, Status.BAD_REQUEST);
 		}
 
-		// Maps a filename to a byte array in memory
-		final String filename = Utils.randomString(8) + "_" + fileDetail
-			.getFileName();
-		locationService.mapFile(filename, bah);
+		final String filename = fileDetail.getFileName();
 
 		final String type;
 		if (typeHint != null && typeHint.length() != 0) {
@@ -189,14 +184,14 @@ public class ObjectsResource {
 			type = mt.substring(0, mt.indexOf('/'));
 		}
 
-		final Object obj;
+		Object obj = null;
 		try {
 			switch (type) {
 				case "image":
-					obj = datasetIOService.open(filename);
+					obj = datasetIOService.open(bah.get());
 					break;
 				case "text":
-					obj = ioService.open(filename);
+					obj = ioService.open(bah.get());
 					break;
 				default:
 					throw new WebApplicationException("Unrecognized format",
@@ -208,9 +203,6 @@ public class ObjectsResource {
 		}
 		catch (final IOException exc) {
 			throw new WebApplicationException(exc, Status.CONFLICT);
-		}
-		finally {
-			locationService.getIdMap().remove(filename, bah);
 		}
 
 		final String id = objectService.register(obj, "uploadFile:filename=" +
@@ -240,11 +232,11 @@ public class ObjectsResource {
 
 		final String filename = String.format("%s.%s", Utils.timestampedId(8),
 			format);
-		final ByteArrayHandle bah = new ByteArrayHandle();
-		locationService.mapFile(filename, bah);
+		final BytesHandle bah = new BytesHandle();
 
 		try {
 			final Object obj = objectService.find(id).getObject();
+			bah.set(new BytesLocation(8192, filename));
 			if (obj instanceof Img) {
 				final Dataset ds;
 				if (obj instanceof Dataset) {
@@ -257,11 +249,12 @@ public class ObjectsResource {
 				}
 				// TODO: inject query parameters into config
 				final SCIFIOConfig config = new SCIFIOConfig();
-				datasetIOService.save(ds, filename, config);
+				datasetIOService.save(ds, bah.get(), config);
 			}
 			else if (obj instanceof Table) {
 				// TODO: inject query parameters into IOPlugin (DefaultTableIOPlugin)
-				ioService.save(obj, filename);
+				TableIOOptions options = TableIOOptions.options();
+				tableIOService.save((Table)obj, bah.get(), options);
 			}
 			else {
 				final String type = obj == null ? "null" : obj.getClass().getName();
@@ -276,7 +269,11 @@ public class ObjectsResource {
 				public void write(OutputStream output) throws IOException,
 					WebApplicationException
 				{
-					output.write(bah.getBytes(), 0, (int) bah.length());
+					byte[] buffer = new byte[1024];
+					int len;
+					while ((len = bah.read(buffer)) != -1) {
+						output.write(buffer, 0, len);
+					}
 				}
 			};
 			final String mt = Utils.getMimetype(filename);
@@ -288,20 +285,17 @@ public class ObjectsResource {
 		catch (final IOException exc) {
 			throw new WebApplicationException(exc, Status.CONFLICT);
 		}
-		finally {
-			locationService.getIdMap().remove(filename, bah);
-		}
 	}
 
 	// -- helper methods --
 
-	private ByteArrayHandle readFileInputStream(final InputStream fileInputStream)
+	private BytesHandle readFileInputStream(final InputStream fileInputStream, String fileName)
 		throws IOException
 	{
-		final ByteArrayHandle bah = new ByteArrayHandle();
-
 		// Reads input file into memory
 		final int BUFFER_SIZE = 8192;
+		final BytesHandle bah = new BytesHandle();
+		bah.set(new BytesLocation(BUFFER_SIZE, fileName));
 		final byte[] buffer = new byte[BUFFER_SIZE];
 		int n = 0;
 		while ((n = fileInputStream.read(buffer)) != -1) {

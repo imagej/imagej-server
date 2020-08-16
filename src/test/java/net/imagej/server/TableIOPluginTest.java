@@ -24,31 +24,25 @@ package net.imagej.server;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import io.scif.io.ByteArrayHandle;
-import io.scif.services.LocationService;
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.List;
 import java.util.function.Function;
-
-import net.imagej.server.external.DefaultTableIOPlugin;
 
 import org.junit.Test;
 import org.scijava.Context;
-import org.scijava.io.IOPlugin;
-import org.scijava.io.IOService;
-import org.scijava.plugin.Parameter;
-import org.scijava.table.GenericTable;
-import org.scijava.util.ClassUtils;
+import org.scijava.io.handle.BytesHandle;
+import org.scijava.io.location.BytesLocation;
+import org.scijava.table.Table;
+import org.scijava.table.io.TableIOOptions;
+import org.scijava.table.io.TableIOPlugin;
+import org.scijava.table.io.TableIOService;
 
 /**
- * Tests for {@link DefaultTableIOPlugin}.
+ * Tests for {@link TableIOPlugin}.
  * 
  * @author Leon Yang
  */
-public class DefaultTableIOPluginTest {
+public class TableIOPluginTest {
 
 	private static final Context ctx = new Context();
 
@@ -71,20 +65,27 @@ public class DefaultTableIOPluginTest {
 			"123.000\t-123.000\t123.000\t123.000\t0.000\n" +
 			"0.000\t1234567890.099\tNaN\t-Infinity\t0.000\n";
 
-		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
-			.getInstance(DefaultTableIOPlugin.class);
+		final TableIOService tableIO = ctx.service(TableIOService.class);
 		try {
 			final Function<String, Double> parser = Double::valueOf;
-			final Function<Double, String> formatter = val -> String.format("%.3f",
-				val);
-			setValues(tableIO, new String[] { "readColHeaders", "writeColHeaders",
-				"readRowHeaders", "writeRowHeaders", "separator", "eol", "quote",
-				"cornerText", "parser", "formatter" }, new Object[] { true, true, false,
-					true, "\t", "\n", "\"", "\\", parser, formatter });
+			final Function<Object, String> formatter = val -> String.format("%.3f",
+					(Double)val);
 
-			final GenericTable table = openTable(tableSource, tableIO);
+			TableIOOptions options = TableIOOptions.options()
+					.readColumnHeaders(true)
+					.writeColumnHeaders(true)
+					.readRowHeaders(false)
+					.writeRowHeaders(false)
+					.columnDelimiter('\t')
+					.rowDelimiter("\n")
+					.quote('\"')
+					.cornerText("\\")
+					.parser(parser)
+					.formatter(formatter);
+
+			final Table table = openTable(tableSource, tableIO, options);
 			assertTableEquals(colHeaders, rowHeaders, content, table);
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 		}
 		catch (final Exception exc) {
 			exc.printStackTrace();
@@ -116,20 +117,25 @@ public class DefaultTableIOPluginTest {
 			"'should\tnot,break',unnecessary_quotes,should,break\r\n" +
 			"'some,empty,cells','','',''\r\n";
 
-		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
-			.getInstance(DefaultTableIOPlugin.class);
+		final TableIOService tableIO = ctx.service(TableIOService.class);
 		try {
-			setValues(tableIO, new String[] { "readColHeaders", "writeColHeaders",
-				"readRowHeaders", "writeRowHeaders", "separator", "eol", "quote",
-				"cornerText", "parser", "formatter" }, new Object[] { true, true, true,
-					true, " ", "\r\n", '\'', "CORNER_TEXT", Function.identity(), Function
-						.identity() });
+			TableIOOptions options = TableIOOptions.options()
+					.readColumnHeaders(true)
+					.writeColumnHeaders(true)
+					.readRowHeaders(true)
+					.writeRowHeaders(true)
+					.columnDelimiter(' ')
+					.rowDelimiter("\r\n")
+					.quote('\'')
+					.cornerText("CORNER_TEXT")
+					.parser(Function.identity())
+					.formatter(Object::toString);
 
-			final GenericTable table = openTable(tableSource, tableIO);
+			final Table table = openTable(tableSource, tableIO, options);
 			assertTableEquals(colHeaders, rowHeaders, content, table);
 
-			setValues(tableIO, new String[] { "separator" }, new Object[] { ',' });
-			assertEquals(expected, saveTable(table, tableIO));
+			options.columnDelimiter(',');
+			assertEquals(expected, saveTable(table, tableIO, options));
 		}
 		catch (final Exception exc) {
 			exc.printStackTrace();
@@ -157,53 +163,61 @@ public class DefaultTableIOPluginTest {
 		final Double[][] content = { { 3.1415926 } };
 		final Double[][] emptyContent = { {} };
 
-		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
-			.getInstance(DefaultTableIOPlugin.class);
+		final TableIOService tableIO = ctx.service(TableIOService.class);
 		try {
-			GenericTable table;
+			Table table;
 			String expected;
 			final Function<String, Double> parser = Double::valueOf;
-			final Function<Double, String> formatter = val -> String.format("%.3f",
-				val);
-			setValues(tableIO, new String[] { "readColHeaders", "writeColHeaders",
-				"readRowHeaders", "writeRowHeaders", "separator", "eol", "quote",
-				"cornerText", "parser", "formatter" }, new Object[] { false, true, true,
-					true, ",", "\n", "'", "CORNER TEXT", parser, formatter });
-			table = openTable(makeTableSource(singleRow, ",", "\n"), tableIO);
+			final Function<Object, String> formatter = val -> String.format("%.3f",
+					(Double)val);
+			TableIOOptions options = TableIOOptions.options()
+					.readColumnHeaders(false)
+					.writeColumnHeaders(false)
+					.readRowHeaders(true)
+					.writeRowHeaders(true)
+					.columnDelimiter(',')
+					.rowDelimiter("\n")
+					.quote('\'')
+					.cornerText("CORNER TEXT")
+					.parser(parser)
+					.formatter(formatter);
+			table = openTable(makeTableSource(singleRow, ",", "\n"), tableIO, options);
 			assertTableEquals(emptyHeader, singleRowHeader, content, table);
 			expected = "Row Header,3.142\n";
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 
-			setValues(tableIO, new String[] { "readRowHeaders" }, new Object[] {
-				false });
-			table = openTable(makeTableSource(singleCell, ",", "\n"), tableIO);
+			options.readRowHeaders(false);
+			options.writeRowHeaders(false);
+			table = openTable(makeTableSource(singleCell, ",", "\n"), tableIO, options);
 			assertTableEquals(emptyHeader, emptyHeader, content, table);
 			expected = "3.142\n";
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 
-			setValues(tableIO, new String[] { "readColHeaders" }, new Object[] {
-				true });
-			table = openTable(makeTableSource(singleCol, ",", "\n"), tableIO);
+			options.readColumnHeaders(true);
+			options.writeColumnHeaders(true);
+			table = openTable(makeTableSource(singleCol, ",", "\n"), tableIO, options);
 			assertTableEquals(singleColHeader, emptyHeader, content, table);
 			expected = "Col Header\n3.142\n";
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 
-			setValues(tableIO, new String[] { "readRowHeaders" }, new Object[] {
-				true });
-			table = openTable(makeTableSource(onlyColHeader, ",", "\n"), tableIO);
+			options.readRowHeaders(true);
+			table = openTable(makeTableSource(onlyColHeader, ",", "\n"), tableIO, options);
 			assertTableEquals(singleColHeader, empty, emptyContent, table);
 			expected = "Col Header\n";
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 
-			table = openTable(makeTableSource(onlyRowHeader, ",", "\n"), tableIO);
+			options.writeColumnHeaders(false);
+			options.writeRowHeaders(true);
+			table = openTable(makeTableSource(onlyRowHeader, ",", "\n"), tableIO, options);
 			assertTableEquals(empty, singleRowHeader, emptyContent, table);
 			expected = "Row Header\n";
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 
-			table = openTable(makeTableSource(full, ",", "\n"), tableIO);
+			options.writeColumnHeaders(true);
+			table = openTable(makeTableSource(full, ",", "\n"), tableIO, options);
 			assertTableEquals(singleColHeader, singleRowHeader, content, table);
 			expected = "CORNER TEXT,Col Header\nRow Header,3.142\n";
-			assertEquals(expected, saveTable(table, tableIO));
+			assertEquals(expected, saveTable(table, tableIO, options));
 		}
 		catch (final Exception exc) {
 			exc.printStackTrace();
@@ -214,8 +228,7 @@ public class DefaultTableIOPluginTest {
 
 	@Test(expected = IOException.class)
 	public void testOpenNonExist() throws IOException {
-		final IOPlugin<GenericTable> tableIO = ctx.service(IOService.class)
-			.getInstance(DefaultTableIOPlugin.class);
+		final TableIOService tableIO = ctx.service(TableIOService.class);
 		tableIO.open("fake.csv");
 	}
 
@@ -226,7 +239,7 @@ public class DefaultTableIOPluginTest {
 	 */
 	private void assertTableEquals(final String[] colHeaders,
 		final String[] rowHeaders, final Object[][] content,
-		final GenericTable table)
+		final Table table)
 	{
 		assertEquals(colHeaders.length, table.getColumnCount());
 		assertEquals(rowHeaders.length, table.getRowCount());
@@ -241,36 +254,28 @@ public class DefaultTableIOPluginTest {
 		}
 	}
 
-	private GenericTable openTable(final String tableSource,
-		final IOPlugin<GenericTable> tableIO) throws IOException
+	private Table openTable(final String tableSource,
+		final TableIOService tableIO, final TableIOOptions options) throws IOException
 	{
-		final ByteArrayHandle bah = new ByteArrayHandle(tableSource.getBytes());
-		ctx.service(LocationService.class).mapFile("table.txt", bah);
-		return tableIO.open("table.txt");
+		final BytesHandle bah = new BytesHandle();
+		BytesLocation data = new BytesLocation(tableSource.getBytes(), "table.csv");
+		bah.set(data);
+		return tableIO.open(bah.get(), options);
 	}
 
-	private String saveTable(final GenericTable table,
-		final IOPlugin<GenericTable> tableIO) throws IOException
+	private String saveTable(final Table table,
+	                         final TableIOService tableIO, TableIOOptions options) throws IOException
 	{
-		final ByteArrayHandle bah = new ByteArrayHandle();
-		ctx.service(LocationService.class).mapFile("table.txt", bah);
-		tableIO.save(table, "table.txt");
-		return new String(bah.getBytes(), 0, (int) bah.length());
-	}
-
-	private void setValues(final Object instance, final String[] fieldNames,
-		final Object[] values) throws SecurityException
-	{
-		final Class<?> cls = instance.getClass();
-		final List<Field> fields = ClassUtils.getAnnotatedFields(cls,
-			Parameter.class);
-		final HashMap<String, Field> fieldMap = new HashMap<>();
-		for (final Field field : fields) {
-			fieldMap.put(field.getName(), field);
+		final BytesHandle bah = new BytesHandle();
+		bah.set(new BytesLocation(1024, "table.csv"));
+		tableIO.save(table, bah.get(), options);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = bah.read(buffer)) != -1) {
+			out.write(buffer, 0, len);
 		}
-		for (int i = 0; i < fieldNames.length; i++) {
-			ClassUtils.setValue(fieldMap.get(fieldNames[i]), instance, values[i]);
-		}
+		return new String(out.toByteArray(), 0, (int) bah.length());
 	}
 
 	private String makeTableSource(final String[][] cells, final String separator,
