@@ -81,8 +81,8 @@
 		<url>http://github.com/imagej/imagej-server</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/imagej/imagej-server</url>
+		<system>GitHub Actions</system>
+		<url>https://github.com/imagej/imagej-server/actions</url>
 	</ciManagement>
 
 	<properties>
@@ -94,7 +94,7 @@ Wisconsin-Madison.</license.copyrightOwners>
 		<license.projectName>ImageJ server for RESTful access to ImageJ.</license.projectName>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
-		<releaseProfiles>deploy-to-scijava</releaseProfiles>
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
 		<dropwizard.version>2.0.9</dropwizard.version>
 		<dropwizard-core.version>${dropwizard.version}</dropwizard-core.version>
