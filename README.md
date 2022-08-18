@@ -1,5 +1,5 @@
 [![](https://github.com/imagej/imagej-server/actions/workflows/build-main.yml/badge.svg)](https://github.com/imagej/imagej-server/actions/workflows/build-main.yml)
-[![Join the chat at https://gitter.im/imagej/imagej-server](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/imagej/imagej-server?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![developer chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://imagesc.zulipchat.com/#narrow/stream/327236-ImageJ2)
 
 # ImageJ Server
 
