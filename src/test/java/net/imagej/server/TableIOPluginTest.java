@@ -257,10 +257,8 @@ public class TableIOPluginTest {
 	private Table openTable(final String tableSource,
 		final TableIOService tableIO, final TableIOOptions options) throws IOException
 	{
-		final BytesHandle bah = new BytesHandle();
 		BytesLocation data = new BytesLocation(tableSource.getBytes(), "table.csv");
-		bah.set(data);
-		return tableIO.open(bah.get(), options);
+		return tableIO.open(data, options);
 	}
 
 	private String saveTable(final Table table,
