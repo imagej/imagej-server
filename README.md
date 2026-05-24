@@ -1,5 +1,4 @@
-[![](https://github.com/imagej/imagej-server/actions/workflows/build-main.yml/badge.svg)](https://github.com/imagej/imagej-server/actions/workflows/build-main.yml)
-[![developer chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://imagesc.zulipchat.com/#narrow/stream/327236-ImageJ2)
+[![Build Status](https://github.com/imagej/imagej-server/actions/workflows/build.yml/badge.svg)](https://github.com/imagej/imagej-server/actions/workflows/build.yml)
 
 # ImageJ Server
 
