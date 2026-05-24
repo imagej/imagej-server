@@ -49,7 +49,7 @@ ImageJ Server. No need to explicitly clone the repository or download any JARs.
 After installing jgo, add the following stanza to your `~/.jgorc` file:
 ```ini
 [repositories]
-imagej.public = https://maven.imagej.net/content/groups/public
+scijava.public = https://maven.scijava.org/content/groups/public
 ```
 
 Then invoke the server with a graphical display as follows:
@@ -115,9 +115,9 @@ that invokes `net.imagej.server.Main.main(String[])`.
 
 ## Usage
 
-### Python Client
+### [Python Client](clients/python)
 
-The [pyimagej](https://github.com/imagej/pyimagej) module includes a Python wrapper for the web API.
+A Python wrapper for the web API.
 
 ### [Postman Collection](clients/postman)
 

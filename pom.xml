@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>29.2.1</version>
+		<version>44.0.0</version>
 		<relativePath />
 	</parent>
 
 	<groupId>net.imagej</groupId>
 	<artifactId>imagej-server</artifactId>
-	<version>0.1.3-SNAPSHOT</version>
+	<version>0.2.0-SNAPSHOT</version>
 
 	<name>ImageJ Server</name>
 	<description>A simple RESTful web server for ImageJ</description>
@@ -88,6 +88,8 @@
 	<properties>
 		<package-name>net.imagej.server</package-name>
 		<main-class>net.imagej.server.Main</main-class>
+		<scijava.jvm.version>8</scijava.jvm.version>
+
 		<license.licenseName>apache_v2</license.licenseName>
 		<license.copyrightOwners>Board of Regents of the University of
 Wisconsin-Madison.</license.copyrightOwners>
@@ -97,14 +99,13 @@ Wisconsin-Madison.</license.copyrightOwners>
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
-		<dropwizard.version>2.0.9</dropwizard.version>
+		<dropwizard.version>2.1.12</dropwizard.version>
 		<dropwizard-core.version>${dropwizard.version}</dropwizard-core.version>
 		<dropwizard-testing.version>${dropwizard.version}</dropwizard-testing.version>
-		<jersey-media-multipart.version>2.31</jersey-media-multipart.version>
-
-		<scijava-table.version>0.7.0</scijava-table.version>
-		<scijava-plugins-io-table.version>0.4.0</scijava-plugins-io-table.version>
-		<scijava-common.version>2.84.0</scijava-common.version>
+		<jersey-media-multipart.version>2.48</jersey-media-multipart.version>
+		<jakarta.activation.version>1.2.2</jakarta.activation.version>
+		<slf4j.version>2.0.17</slf4j.version>
+		<logback-access.version>1.3.16</logback-access.version>
 	</properties>
 
 	<dependencies>
@@ -130,14 +131,6 @@ Wisconsin-Madison.</license.copyrightOwners>
 					<groupId>javax.servlet</groupId>
 					<artifactId>javax.servlet-api</artifactId>
 				</exclusion>
-				<!--
-				NB: Conflicts with org.slf4j:log4j-over-slf4j which is brought in by
-				io.dropwizard:dropwizard-logging via io.dropwizard:dropwizard-core.
-				-->
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -146,11 +139,39 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<groupId>io.dropwizard</groupId>
 			<artifactId>dropwizard-core</artifactId>
 			<version>${dropwizard-core.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>jakarta.activation</groupId>
+					<artifactId>jakarta.activation-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey-media-multipart.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.activation</groupId>
+			<artifactId>jakarta.activation</artifactId>
+			<version>${jakarta.activation.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-access</artifactId>
+			<version>${logback-access.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Test scope dependencies -->
@@ -169,6 +190,16 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<artifactId>dropwizard-testing</artifactId>
 			<version>${dropwizard-testing.version}</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>jakarta.activation</groupId>
+					<artifactId>jakarta.activation-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 

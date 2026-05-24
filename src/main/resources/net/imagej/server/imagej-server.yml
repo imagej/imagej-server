@@ -7,3 +7,8 @@ logging:
       timeZone: UTC
       target: stdout
       logFormat: # TODO
+
+# Disable HTTP access logging (logback-access 1.3.x is incompatible with logback-core 1.3.x).
+server:
+  requestLog:
+    appenders: []

@@ -66,6 +66,11 @@ public class ImageJServer extends Application<ImageJServerConfiguration> {
 	}
 
 	@Override
+	protected void bootstrapLogging() {
+		// Fiji manages its own logging; suppress Dropwizard's attempt to take over.
+	}
+
+	@Override
 	public String getName() {
 		return "ImageJ";
 	}

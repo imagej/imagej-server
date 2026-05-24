@@ -3,5 +3,9 @@
 
 # Eclipse #
 /.classpath
+/.factorypath
 /.project
 /.settings/
+
+# Python #
+__pycache__/

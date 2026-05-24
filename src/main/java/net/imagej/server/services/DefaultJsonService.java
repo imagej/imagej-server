@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,7 +80,7 @@ public class DefaultJsonService implements JsonService {
 	public DefaultJsonService(final Context ctx,
 		final ObjectService objectService)
 	{
-		idToObjDeserializer = new UntypedObjectDeserializer(null, null) {
+		idToObjDeserializer = new UntypedObjectDeserializer(null, (JavaType) null) {
 
 			@Override
 			public Object deserialize(JsonParser p, DeserializationContext ctxt)
