@@ -92,6 +92,7 @@
 		<license.copyrightOwners>Board of Regents of the University of
 Wisconsin-Madison.</license.copyrightOwners>
 		<license.projectName>ImageJ server for RESTful access to ImageJ.</license.projectName>
+		<license.excludes>**/*.json</license.excludes>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>

@@ -2,7 +2,7 @@
  * #%L
  * ImageJ server for RESTful access to ImageJ.
  * %%
- * Copyright (C) 2013 - 2016 Board of Regents of the University of
+ * Copyright (C) 2013 - 2026 Board of Regents of the University of
  * Wisconsin-Madison.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
