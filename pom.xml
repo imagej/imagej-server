@@ -94,8 +94,12 @@ Wisconsin-Madison.</license.copyrightOwners>
 		<dropwizard-testing.version>${dropwizard.version}</dropwizard-testing.version>
 		<jersey-media-multipart.version>2.48</jersey-media-multipart.version>
 		<jakarta.activation.version>1.2.2</jakarta.activation.version>
+		<!-- TEMP: The following versions bring the classpath into more proper alignment. -->
 		<slf4j.version>2.0.17</slf4j.version>
 		<logback-access.version>1.3.16</logback-access.version>
+		<!-- TEMP: The following versions have bugfixes needed for tests to pass. -->
+		<scijava-table.version>1.0.3</scijava-table.version>
+		<scijava-common.version>2.100.1</scijava-common.version>
 	</properties>
 
 	<dependencies>
@@ -141,15 +145,19 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey-media-multipart.version}</version>
 		</dependency>
+
+		<!-- TEMP: The following dependencies bring the classpath into more proper alignment. -->
 		<dependency>
 			<groupId>com.sun.activation</groupId>
 			<artifactId>jakarta.activation</artifactId>
 			<version>${jakarta.activation.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
 			<version>${slf4j.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
@@ -168,6 +176,11 @@ Wisconsin-Madison.</license.copyrightOwners>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

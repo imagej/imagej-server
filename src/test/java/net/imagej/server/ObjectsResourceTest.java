@@ -23,7 +23,6 @@ package net.imagej.server;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import io.scif.services.DatasetIOService;
@@ -74,60 +73,55 @@ public class ObjectsResourceTest extends AbstractResourceTest {
 	 * <li>retrieve file</li>
 	 */
 	@Test
-	public void ioResource() {
-		try {
-			// Test upload image
-			final String imgID = uploadFile("imgs/about4.tif");
-			assertTrue(objectService.contains(imgID));
+	public void ioResource() throws IOException {
+		// Test upload image
+		final String imgID = uploadFile("imgs/about4.tif");
+		assertTrue(objectService.contains(imgID));
 
-			// Test upload table
-			final String tableID = uploadFile("texts/table.csv");
-			assertTrue(objectService.contains(tableID));
+		// Test upload table
+		final String tableID = uploadFile("texts/table.csv");
+		assertTrue(objectService.contains(tableID));
 
-			// Test getIDs
-			final String secondImg = uploadFile("imgs/about4.tif");
-			assertTrue(objectService.contains(secondImg));
-			assertTrue(!imgID.equals(secondImg));
-			final List<String> ids = Arrays.asList(getIDs());
-			assertTrue(ids.contains(imgID));
-			assertTrue(ids.contains(secondImg));
-			assertTrue(ids.contains(tableID));
+		// Test getIDs
+		final String secondImg = uploadFile("imgs/about4.tif");
+		assertTrue(objectService.contains(secondImg));
+		assertTrue(!imgID.equals(secondImg));
+		final List<String> ids = Arrays.asList(getIDs());
+		assertTrue(ids.contains(imgID));
+		assertTrue(ids.contains(secondImg));
+		assertTrue(ids.contains(tableID));
 
-			// Test getID
-			assertEquals(getObject(imgID).getStatusInfo(), Status.OK);
-			assertEquals(getObject(secondImg).getStatusInfo(), Status.OK);
-			assertEquals(getObject(tableID).getStatusInfo(), Status.OK);
+		// Test getID
+		assertEquals(getObject(imgID).getStatusInfo(), Status.OK);
+		assertEquals(getObject(secondImg).getStatusInfo(), Status.OK);
+		assertEquals(getObject(tableID).getStatusInfo(), Status.OK);
 
-			// Test removeID
-			assertEquals(Status.OK, removeID(secondImg).getStatusInfo());
-			assertEquals(Status.NOT_FOUND, retrieveFile(secondImg, "fmt")
-				.getStatusInfo());
+		// Test removeID
+		assertEquals(Status.OK, removeID(secondImg).getStatusInfo());
+		assertEquals(Status.NOT_FOUND, retrieveFile(secondImg, "fmt")
+			.getStatusInfo());
 
-			// Test retrieve image
-			final File downloaded = retrieveFile(imgID, "tiff").readEntity(
-				File.class);
-			final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
-				.getAbsolutePath());
-			final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID)
-				.getObject()).iterator();
-			final Iterator<?> actualItr = ds.iterator();
-			while (expectedItr.hasNext()) {
-				assertTrue(actualItr.hasNext());
-				assertEquals(expectedItr.next(), actualItr.next());
-			}
-			assertTrue(!actualItr.hasNext());
-
-			// Test retrieve table
-			final File downloadTable = retrieveFile(tableID, "csv").readEntity(
-				File.class);
-			final String secondTable = uploadFile("secondTable.csv",
-				new FileInputStream(downloadTable));
-			assertEquals(objectService.find(tableID).getObject(), objectService.find(
-				secondTable).getObject());
+		// Test retrieve image
+		final File downloaded = retrieveFile(imgID, "tiff").readEntity(
+			File.class);
+		final Dataset ds = ctx.service(DatasetIOService.class).open(downloaded
+			.getAbsolutePath());
+		final Iterator<?> expectedItr = ((Iterable<?>) objectService.find(imgID)
+			.getObject()).iterator();
+		final Iterator<?> actualItr = ds.iterator();
+		while (expectedItr.hasNext()) {
+			assertTrue(actualItr.hasNext());
+			assertEquals(expectedItr.next(), actualItr.next());
 		}
-		catch (IOException exc) {
-			fail(exc.getMessage());
-		}
+		assertTrue(!actualItr.hasNext());
+
+		// Test retrieve table
+		final File downloadTable = retrieveFile(tableID, "csv").readEntity(
+			File.class);
+		final String secondTable = uploadFile("secondTable.csv",
+			new FileInputStream(downloadTable));
+		assertEquals(objectService.find(tableID).getObject(), objectService.find(
+			secondTable).getObject());
 	}
 
 	// -- helper methods --

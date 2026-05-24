@@ -22,7 +22,6 @@
 package net.imagej.server;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,7 +49,7 @@ public class TableIOPluginTest {
 	 * Tests if the parser works on a common tab-delimited table.
 	 */
 	@Test
-	public void testParser() {
+	public void testParser() throws IOException {
 		final String[][] cells = { { "col1", "col2", "col3", "col4", "col5" }, {
 			"123", "-123.0", "+123.0f", "0123.0d", "0.0" }, { "00000",
 				"1234567890.0987654321", "+NaN", "-Infinity", "000.000" } };
@@ -66,38 +65,32 @@ public class TableIOPluginTest {
 			"0.000\t1234567890.099\tNaN\t-Infinity\t0.000\n";
 
 		final TableIOService tableIO = ctx.service(TableIOService.class);
-		try {
-			final Function<String, Double> parser = Double::valueOf;
-			final Function<Object, String> formatter = val -> String.format("%.3f",
-					(Double)val);
+		final Function<String, Double> parser = Double::valueOf;
+		final Function<Object, String> formatter = val -> String.format("%.3f",
+				(Double)val);
 
-			TableIOOptions options = TableIOOptions.options()
-					.readColumnHeaders(true)
-					.writeColumnHeaders(true)
-					.readRowHeaders(false)
-					.writeRowHeaders(false)
-					.columnDelimiter('\t')
-					.rowDelimiter("\n")
-					.quote('\"')
-					.cornerText("\\")
-					.parser(parser)
-					.formatter(formatter);
+		TableIOOptions options = TableIOOptions.options()
+				.readColumnHeaders(true)
+				.writeColumnHeaders(true)
+				.readRowHeaders(false)
+				.writeRowHeaders(false)
+				.columnDelimiter('\t')
+				.rowDelimiter("\n")
+				.quote('\"')
+				.cornerText("\\")
+				.parser(parser)
+				.formatter(formatter);
 
-			final Table table = openTable(tableSource, tableIO, options);
-			assertTableEquals(colHeaders, rowHeaders, content, table);
-			assertEquals(expected, saveTable(table, tableIO, options));
-		}
-		catch (final Exception exc) {
-			exc.printStackTrace();
-			fail(exc.getMessage());
-		}
+		final Table table = openTable(tableSource, tableIO, options);
+		assertTableEquals(colHeaders, rowHeaders, content, table);
+		assertEquals(expected, saveTable(table, tableIO, options));
 	}
 
 	/**
 	 * Tests if quoting works in different senarios.
 	 */
 	@Test
-	public void testQuote() {
+	public void testQuote() throws IOException {
 		final String[][] cells = { { "CORNER_TEXT",
 			"' col  1 with white   spaces '", "'col 2 with ''QUOTE'' inside'",
 			"'col 3 'connect,two' quoted strings'" }, { "should\tnot,break",
@@ -118,36 +111,30 @@ public class TableIOPluginTest {
 			"'some,empty,cells','','',''\r\n";
 
 		final TableIOService tableIO = ctx.service(TableIOService.class);
-		try {
-			TableIOOptions options = TableIOOptions.options()
-					.readColumnHeaders(true)
-					.writeColumnHeaders(true)
-					.readRowHeaders(true)
-					.writeRowHeaders(true)
-					.columnDelimiter(' ')
-					.rowDelimiter("\r\n")
-					.quote('\'')
-					.cornerText("CORNER_TEXT")
-					.parser(Function.identity())
-					.formatter(Object::toString);
+		TableIOOptions options = TableIOOptions.options()
+				.readColumnHeaders(true)
+				.writeColumnHeaders(true)
+				.readRowHeaders(true)
+				.writeRowHeaders(true)
+				.columnDelimiter(' ')
+				.rowDelimiter("\r\n")
+				.quote('\'')
+				.cornerText("CORNER_TEXT")
+				.parser(Function.identity())
+				.formatter(Object::toString);
 
-			final Table table = openTable(tableSource, tableIO, options);
-			assertTableEquals(colHeaders, rowHeaders, content, table);
+		final Table table = openTable(tableSource, tableIO, options);
+		assertTableEquals(colHeaders, rowHeaders, content, table);
 
-			options.columnDelimiter(',');
-			assertEquals(expected, saveTable(table, tableIO, options));
-		}
-		catch (final Exception exc) {
-			exc.printStackTrace();
-			fail(exc.getMessage());
-		}
+		options.columnDelimiter(',');
+		assertEquals(expected, saveTable(table, tableIO, options));
 	}
 
 	/**
 	 * Tests if samll tables could be opened/saved correctly.
 	 */
 	@Test
-	public void testSmallTables() {
+	public void testSmallTables() throws IOException {
 		final String[][] singleRow = { { "Row Header", "   3.1415926   " } };
 		final String[][] singleCell = { { "   3.1415926   " } };
 		final String[][] singleCol = { { "Col Header" }, { "   3.1415926   " } };
@@ -164,69 +151,62 @@ public class TableIOPluginTest {
 		final Double[][] emptyContent = { {} };
 
 		final TableIOService tableIO = ctx.service(TableIOService.class);
-		try {
-			Table table;
-			String expected;
-			final Function<String, Double> parser = Double::valueOf;
-			final Function<Object, String> formatter = val -> String.format("%.3f",
-					(Double)val);
-			TableIOOptions options = TableIOOptions.options()
-					.readColumnHeaders(false)
-					.writeColumnHeaders(false)
-					.readRowHeaders(true)
-					.writeRowHeaders(true)
-					.columnDelimiter(',')
-					.rowDelimiter("\n")
-					.quote('\'')
-					.cornerText("CORNER TEXT")
-					.parser(parser)
-					.formatter(formatter);
-			table = openTable(makeTableSource(singleRow, ",", "\n"), tableIO, options);
-			assertTableEquals(emptyHeader, singleRowHeader, content, table);
-			expected = "Row Header,3.142\n";
-			assertEquals(expected, saveTable(table, tableIO, options));
+		Table table;
+		String expected;
+		final Function<String, Double> parser = Double::valueOf;
+		final Function<Object, String> formatter = val -> String.format("%.3f",
+				(Double)val);
+		TableIOOptions options = TableIOOptions.options()
+				.readColumnHeaders(false)
+				.writeColumnHeaders(false)
+				.readRowHeaders(true)
+				.writeRowHeaders(true)
+				.columnDelimiter(',')
+				.rowDelimiter("\n")
+				.quote('\'')
+				.cornerText("CORNER TEXT")
+				.parser(parser)
+				.formatter(formatter);
+		table = openTable(makeTableSource(singleRow, ",", "\n"), tableIO, options);
+		assertTableEquals(emptyHeader, singleRowHeader, content, table);
+		expected = "Row Header,3.142\n";
+		assertEquals(expected, saveTable(table, tableIO, options));
 
-			options.readRowHeaders(false);
-			options.writeRowHeaders(false);
-			table = openTable(makeTableSource(singleCell, ",", "\n"), tableIO, options);
-			assertTableEquals(emptyHeader, emptyHeader, content, table);
-			expected = "3.142\n";
-			assertEquals(expected, saveTable(table, tableIO, options));
+		options.readRowHeaders(false);
+		options.writeRowHeaders(false);
+		table = openTable(makeTableSource(singleCell, ",", "\n"), tableIO, options);
+		assertTableEquals(emptyHeader, emptyHeader, content, table);
+		expected = "3.142\n";
+		assertEquals(expected, saveTable(table, tableIO, options));
 
-			options.readColumnHeaders(true);
-			options.writeColumnHeaders(true);
-			table = openTable(makeTableSource(singleCol, ",", "\n"), tableIO, options);
-			assertTableEquals(singleColHeader, emptyHeader, content, table);
-			expected = "Col Header\n3.142\n";
-			assertEquals(expected, saveTable(table, tableIO, options));
+		options.readColumnHeaders(true);
+		options.writeColumnHeaders(true);
+		table = openTable(makeTableSource(singleCol, ",", "\n"), tableIO, options);
+		assertTableEquals(singleColHeader, emptyHeader, content, table);
+		expected = "Col Header\n3.142\n";
+		assertEquals(expected, saveTable(table, tableIO, options));
 
-			options.readRowHeaders(true);
-			table = openTable(makeTableSource(onlyColHeader, ",", "\n"), tableIO, options);
-			assertTableEquals(singleColHeader, empty, emptyContent, table);
-			expected = "Col Header\n";
-			assertEquals(expected, saveTable(table, tableIO, options));
+		options.readRowHeaders(true);
+		table = openTable(makeTableSource(onlyColHeader, ",", "\n"), tableIO, options);
+		assertTableEquals(singleColHeader, empty, emptyContent, table);
+		expected = "Col Header\n";
+		assertEquals(expected, saveTable(table, tableIO, options));
 
-			options.writeColumnHeaders(false);
-			options.writeRowHeaders(true);
-			table = openTable(makeTableSource(onlyRowHeader, ",", "\n"), tableIO, options);
-			assertTableEquals(empty, singleRowHeader, emptyContent, table);
-			expected = "Row Header\n";
-			assertEquals(expected, saveTable(table, tableIO, options));
+		options.writeColumnHeaders(false);
+		options.writeRowHeaders(true);
+		table = openTable(makeTableSource(onlyRowHeader, ",", "\n"), tableIO, options);
+		assertTableEquals(empty, singleRowHeader, emptyContent, table);
+		expected = "Row Header\n";
+		assertEquals(expected, saveTable(table, tableIO, options));
 
-			options.writeColumnHeaders(true);
-			table = openTable(makeTableSource(full, ",", "\n"), tableIO, options);
-			assertTableEquals(singleColHeader, singleRowHeader, content, table);
-			expected = "CORNER TEXT,Col Header\nRow Header,3.142\n";
-			assertEquals(expected, saveTable(table, tableIO, options));
-		}
-		catch (final Exception exc) {
-			exc.printStackTrace();
-			fail(exc.getMessage());
-		}
-
+		options.writeColumnHeaders(true);
+		table = openTable(makeTableSource(full, ",", "\n"), tableIO, options);
+		assertTableEquals(singleColHeader, singleRowHeader, content, table);
+		expected = "CORNER TEXT,Col Header\nRow Header,3.142\n";
+		assertEquals(expected, saveTable(table, tableIO, options));
 	}
 
-	@Test(expected = IOException.class)
+	@Test(expected = UnsupportedOperationException.class)
 	public void testOpenNonExist() throws IOException {
 		final TableIOService tableIO = ctx.service(TableIOService.class);
 		tableIO.open("fake.csv");
@@ -264,16 +244,17 @@ public class TableIOPluginTest {
 	private String saveTable(final Table table,
 	                         final TableIOService tableIO, TableIOOptions options) throws IOException
 	{
-		final BytesHandle bah = new BytesHandle();
-		bah.set(new BytesLocation(1024, "table.csv"));
-		tableIO.save(table, bah.get(), options);
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		byte[] buffer = new byte[1024];
-		int len;
-		while ((len = bah.read(buffer)) != -1) {
-			out.write(buffer, 0, len);
+		try (final BytesHandle bah = new BytesHandle()) {
+			bah.set(new BytesLocation(1024, "table.csv"));
+			tableIO.save(table, bah.get(), options);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			byte[] buffer = new byte[1024];
+			int len;
+			while ((len = bah.read(buffer)) != -1) {
+				out.write(buffer, 0, len);
+			}
+			return new String(out.toByteArray(), 0, (int) bah.length());
 		}
-		return new String(out.toByteArray(), 0, (int) bah.length());
 	}
 
 	private String makeTableSource(final String[][] cells, final String separator,
