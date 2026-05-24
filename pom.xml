@@ -33,7 +33,7 @@
 		<developer>
 			<id>ctrueden</id>
 			<name>Curtis Rueden</name>
-			<url>https://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/people/ctrueden</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -44,22 +44,12 @@
 				<role>maintainer</role>
 			</roles>
 		</developer>
-		<developer>
-			<id>lnyng</id>
-			<name>Leon Yang</name>
-			<url>https://imagej.net/User:Leon</url>
-			<roles>
-				<role>developer</role>
-			</roles>
-		</developer>
 	</developers>
 	<contributors>
-		<!--
-		NB: Need at least one element to override the parent.
-		See: https://issues.apache.org/jira/browse/MNG-5220
-		-->
 		<contributor>
-			<name>None</name>
+			<name>Leon Yang</name>
+			<url>https://imagej.net/people/lnyng</url>
+			<properties><id>lnyng</id></properties>
 		</contributor>
 	</contributors>
 
