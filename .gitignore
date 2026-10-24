@@ -9,3 +9,6 @@
 
 # Python #
 __pycache__/
+
+# IntelliJ #
+/.idea/
